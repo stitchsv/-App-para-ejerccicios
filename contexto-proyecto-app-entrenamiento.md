@@ -1,5 +1,54 @@
 # Contexto del proyecto — App de seguimiento de entrenamiento
 
+## Estado actual (actualizado 2026-08-15)
+
+**Fase esquema + RLS: hecha.** El esquema completo (`exercises`, `routine_days`,
+`routine_day_exercises`, `workout_sessions`, `session_sets`,
+`body_measurements`, `cardio_sessions`) ya está corrido en el proyecto real de
+Supabase (ref `utdyofyxdszqkebaenap`), con RLS activo y policy
+`auth.uid() = user_id` en cada tabla. El SQL de creación + seed se compartió y
+corrió directo en el SQL Editor de Supabase — **todavía no vive como archivo
+de migración en este repo** (ver "Qué falta" más abajo).
+
+**Fase frontend estructura: hecha.** `index.html` (raíz, redirige según
+sesión) + `css/` + `js/` + `html/` con `login.html`, `dashboard.html` ("Hoy")
+y `registrar-sesion.html`. Vanilla JS + Bootstrap 5 + `supabase-js` v2 vía
+CDN, sin build tools, tal como decide el stack técnico.
+
+**Fase auth/RLS + CRUD básico + registro de sesión: verificada end-to-end
+contra Supabase real**, no solo revisada por código:
+- Signup → confirmación de email → login → dashboard → registrar sesión,
+  probado completo con un usuario de prueba real
+  (`guzmanmoraneduardo+test@gmail.com`).
+- El dashboard "Hoy" lee `routine_days`/`routine_day_exercises`/`exercises`
+  reales (día de la semana mapeado correctamente: la BD usa 1=lunes...7=domingo,
+  el frontend convierte desde `Date.getDay()`). Si un usuario no tiene rutina
+  sembrada para hoy, cae a una rutina de referencia local (los mismos valores
+  de este documento) en vez de romperse — pensado para desarrollo, no debería
+  activarse una vez que todo usuario real tenga su rutina sembrada.
+- El formulario de registro separa automáticamente ejercicios de fuerza/
+  pliometría (guardan series peso×reps en `session_sets`) de cardio (guardan
+  duración/distancia/FC en `cardio_sessions`), porque `session_sets.reps` es
+  `not null` y no tiene columna de duración. Confirmado insertando datos
+  reales y verificando que llegaron a las tablas correctas.
+- RLS confirmado funcionando: un usuario nuevo sin rutina sembrada no ve datos
+  de otros usuarios (dashboard cae al fallback local en vez de mostrar datos
+  ajenos).
+- Credenciales reales en `js/config.js` (gitignorado; plantilla en
+  `js/config.example.js`), cargado antes de `js/supabaseClient.js` — el
+  proyecto no usa bundler, así que el navegador no puede leer `.env`
+  directamente.
+- Dos bugs encontrados y corregidos durante la prueba: `registrar-sesion.js`
+  volvía a pedir el usuario con `getUser()` dentro de `onSubmit` en vez de
+  reusar el de `requireSession()` (crasheaba si el token rotaba entre cargar
+  la página y enviar el formulario); y `session_date`/`cardio_date` se
+  guardaban en UTC (`toISOString()`) en vez de fecha local, desalineando la
+  sesión guardada con el día de rutina mostrado para la zona horaria de
+  Centro de México por las noches.
+
+**Sin empezar:** Historial, Editor de rutina, Gráficas (Chart.js), UI de
+`body_measurements`, decisión de hosting. Ver "Qué falta" para más detalle.
+
 ## Qué se está construyendo
 
 Una aplicación web personal (un solo usuario real por ahora, pero implementada
@@ -27,7 +76,16 @@ con autenticación y RLS "bien hecho" como práctica) para:
   real es de un solo usuario, se implementa auth y RLS correctamente como
   ejercicio de práctica.
 
-## Modelo de datos (borrador de tablas)
+## Modelo de datos (implementado en Supabase; nombres de columna reales)
+
+Ya no es borrador: este esquema está corrido y sembrado en el proyecto real.
+Los nombres de columna reales (usados por el frontend) difieren un poco de
+la descripción conceptual original — por ejemplo `routine_days.focus` (no
+"enfoque"), `exercises.name` (no "nombre"), `workout_sessions.session_date`
+(no "fecha"), `session_sets.weight_kg`/`reps`/`set_number` (no "peso"/"orden").
+El SQL completo con esos nombres solo existe en el historial de esta
+conversación y en la base real — no como archivo versionado (pendiente, ver
+"Qué falta").
 
 - `exercises` — catálogo de ejercicios: nombre, grupo muscular, tipo
   (fuerza / cardio / pliometría).
@@ -100,6 +158,35 @@ automatizado.
 | Viernes | Pliometría + Hombro (ligero) | Saltos/Box jumps, Press militar con mancuernas, Elevaciones laterales |
 | Sábado | Pecho + Bíceps (pesado) | Press inclinado, Fly con mancuernas, Fondos asistidos, Curl de bíceps, Curl martillo |
 | Domingo | Correr (zona 2) | Carrera suave, opcional curl de muñeca ligero |
+
+## Qué falta
+
+- **Migraciones versionadas.** El esquema + seed viven en Supabase pero no en
+  `supabase/migrations/*.sql` dentro del repo — si alguien reconstruye el
+  proyecto desde cero, no hay fuente de verdad local del schema.
+- **Usuario canónico.** El usuario original sembrado en la migración inicial
+  (`v_user_id` de la primera corrida) quedó con password desconocida y sin
+  poder resetearla por rate limit de email. Se sembraron los mismos datos
+  para un segundo usuario de prueba (`guzmanmoraneduardo+test@gmail.com`) que
+  sí funciona — falta decidir si ese es el usuario "real" definitivo o si se
+  limpia/consolida más adelante.
+- **Historial** — pantalla de sesiones pasadas filtrable por día/ejercicio/
+  fecha. No existe todavía ni el archivo HTML ni el JS.
+- **Editor de rutina** — pantalla para modificar `routine_days`/
+  `routine_day_exercises` sin tocar SQL directo. No existe todavía.
+- **Gráficas (Chart.js)** — ninguna de las 5 gráficas del plan está
+  implementada; Chart.js ni siquiera está incluido en el proyecto todavía.
+- **`body_measurements`** — la tabla existe con RLS, pero no hay ninguna
+  pantalla ni formulario para leerla o escribirla.
+- **Recuperación de contraseña** — el formulario de login no tiene flujo de
+  "olvidé mi contraseña" (relevante porque ya se vivió el problema una vez).
+- **Hosting** — sin decidir entre Netlify/Vercel/GitHub Pages; el proyecto
+  solo se ha probado con un servidor estático local.
+- **Confirmación de email** — el proyecto Supabase tiene confirmación de
+  email activada por defecto con el mailer integrado, que tiene rate limit
+  muy bajo (~2 emails/hora). Vale la pena decidir si se queda así, se
+  desactiva (razonable para un proyecto de un solo usuario), o se configura
+  SMTP propio más adelante.
 
 ## Cómo debe ayudar Claude en este proyecto
 
