@@ -1,15 +1,174 @@
-/* Ajustes propios encima de Bootstrap 5. Pensado para usarse desde el
-   celular en el gimnasio: inputs y botones grandes, poco scroll. */
+/* =====================================================================
+   Sistema visual "workbench de gimnasio" — denso, oscuro, un solo acento.
+   Confirmado con el usuario: base y texto neutros (sin sesgo cálido), el
+   ámbar queda reservado para acción/pendiente, verde para logrado.
+   Encima de Bootstrap 5: se sobreescriben las variables de Bootstrap donde
+   alcanza, y se fuerzan selectores puntuales donde Bootstrap no expone var.
+   ===================================================================== */
+
+:root {
+  /* Superficies: input más oscuro que la tarjeta, la tarjeta más clara que
+     la base — profundidad por escalón, sin sombras. */
+  --surface-0: #18181b;
+  --surface-1: #222225;
+  --surface-2: #2a2a2e;
+  --surface-input: #101012;
+
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+
+  --text-primary: #e7e7e4;
+  --text-secondary: #b4b4b0;
+  --text-muted: #8b8b8d;
+
+  --accent: #d98c3d;
+  --accent-strong: #e6a15c;
+  --success: #6fa05e;
+  --danger: #c2554a;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+
+  --font-mono: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* Puente hacia las variables de Bootstrap para que cascadeen al resto de
+     componentes (cards, list-group, tablas, formularios, alerts). */
+  --bs-body-bg: var(--surface-0);
+  --bs-body-color: var(--text-primary);
+  --bs-emphasis-color: var(--text-primary);
+  --bs-secondary-color: var(--text-secondary);
+  --bs-tertiary-color: var(--text-muted);
+  --bs-border-color: var(--border);
+  --bs-border-color-translucent: var(--border);
+
+  --bs-primary: var(--accent);
+  --bs-primary-rgb: 217, 140, 61;
+  --bs-primary-text-emphasis: var(--accent-strong);
+  --bs-primary-bg-subtle: #2e2417;
+  --bs-primary-border-subtle: #4a3a24;
+
+  --bs-success: var(--success);
+  --bs-success-rgb: 111, 160, 94;
+  --bs-success-text-emphasis: #8fbf7e;
+  --bs-success-bg-subtle: #1e2a1a;
+  --bs-success-border-subtle: #35472c;
+
+  --bs-danger: var(--danger);
+  --bs-danger-rgb: 194, 85, 74;
+  --bs-danger-text-emphasis: #d98479;
+  --bs-danger-bg-subtle: #2e1a17;
+  --bs-danger-border-subtle: #4a2924;
+
+  --bs-warning: var(--accent);
+  --bs-warning-rgb: 217, 140, 61;
+  --bs-warning-text-emphasis: var(--accent-strong);
+  --bs-warning-bg-subtle: #2e2417;
+  --bs-warning-border-subtle: #4a3a24;
+
+  --bs-link-color: var(--accent-strong);
+  --bs-link-hover-color: var(--accent);
+
+  --bs-card-bg: var(--surface-1);
+  --bs-card-color: var(--text-primary);
+  --bs-card-border-color: var(--border);
+  --bs-card-cap-bg: var(--surface-1);
+
+  --bs-list-group-bg: var(--surface-1);
+  --bs-list-group-color: var(--text-primary);
+  --bs-list-group-border-color: var(--border);
+  --bs-list-group-action-hover-bg: var(--surface-2);
+
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--text-primary);
+  --bs-table-border-color: var(--border);
+  --bs-table-striped-bg: rgba(255, 255, 255, 0.02);
+  --bs-table-hover-bg: var(--surface-2);
+  --bs-table-hover-color: var(--text-primary);
+
+  --bs-focus-ring-color: rgba(217, 140, 61, 0.4);
+}
 
 body {
-  background-color: #f8f9fa;
+  background-color: var(--surface-0);
+  color: var(--text-primary);
   padding-bottom: 3rem;
+  -webkit-font-smoothing: antialiased;
 }
 
 .app-container {
   max-width: 640px;
   margin: 0 auto;
   padding: 1rem;
+}
+
+/* ---------------------------------------------------------------------
+   Tipografía y números — el "console" del workbench: cualquier dato
+   dinámico (peso, reps, fechas, series) va en monospace tabular para que
+   no brinque de ancho y se lea como un dial, no como texto suelto.
+   --------------------------------------------------------------------- */
+
+.stat,
+input[type="number"],
+input[type="date"] {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.ghost-target {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.text-accent {
+  color: var(--accent-strong) !important;
+}
+
+.text-success-workbench {
+  color: var(--success) !important;
+}
+
+/* ---------------------------------------------------------------------
+   Formularios — inputs más oscuros que su entorno (reciben contenido).
+   --------------------------------------------------------------------- */
+
+.form-control,
+.form-select,
+.form-control:focus,
+.form-select:focus {
+  background-color: var(--surface-input);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.form-control::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+.form-control:focus,
+.form-select:focus {
+  box-shadow: 0 0 0 3px var(--bs-focus-ring-color);
+}
+
+.form-label {
+  color: var(--text-secondary);
+}
+
+a {
+  color: var(--accent-strong);
+}
+
+a:hover {
+  color: var(--accent);
 }
 
 .form-control,
@@ -21,10 +180,169 @@ input[type="number"] {
   text-align: center;
 }
 
-.set-row .col-2 {
-  font-weight: 600;
+/* ---------------------------------------------------------------------
+   Botones — un solo acento sólido, el resto en outline. Sin sombras.
+   --------------------------------------------------------------------- */
+
+.btn {
+  border-radius: var(--radius-md);
+  box-shadow: none !important;
+}
+
+.btn-primary {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: #1a1005;
+  font-weight: 500;
+}
+
+.btn-primary:hover,
+.btn-primary:active {
+  background-color: var(--accent-strong) !important;
+  border-color: var(--accent-strong) !important;
+  color: #1a1005 !important;
+}
+
+.btn-outline-primary {
+  color: var(--accent-strong);
+  border-color: var(--accent);
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: #1a1005;
+}
+
+.btn-outline-secondary,
+.btn-outline-light {
+  color: var(--text-secondary);
+  border-color: var(--border-strong);
+}
+
+.btn-outline-secondary:hover,
+.btn-outline-light:hover {
+  background-color: var(--surface-2);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.btn-outline-danger {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.btn-outline-danger:hover {
+  background-color: var(--danger);
+  border-color: var(--danger);
+  color: #1a0a08;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+/* ---------------------------------------------------------------------
+   Tarjetas, listas, tablas — profundidad por escalón, bordes sutiles.
+   --------------------------------------------------------------------- */
+
+.card {
+  border-radius: var(--radius-lg);
+  box-shadow: none;
+}
+
+.list-group-item {
+  background-color: transparent;
+}
+
+.table {
+  --bs-table-bg-state: transparent;
+}
+
+.table > :not(caption) > * > * {
+  color: var(--text-primary);
+}
+
+.table thead th {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 500;
+  border-bottom-color: var(--border-strong);
+}
+
+/* ---------------------------------------------------------------------
+   Navbar — misma superficie que la página, no un bloque aparte.
+   --------------------------------------------------------------------- */
+
+.navbar.bg-dark {
+  background-color: var(--surface-0) !important;
+  border-bottom: 1px solid var(--border);
 }
 
 .navbar-brand {
   font-weight: 600;
+  color: var(--text-primary) !important;
+}
+
+.link-light {
+  color: var(--text-secondary) !important;
+  text-decoration: none;
+}
+
+.link-light:hover {
+  color: var(--text-primary) !important;
+}
+
+/* ---------------------------------------------------------------------
+   Badges — insignia "ghost" en vez de píldora sólida, para no competir
+   con el acento. El acento sólo aparece cuando algo requiere atención.
+   --------------------------------------------------------------------- */
+
+.badge.text-bg-secondary,
+.badge.text-bg-info {
+  background-color: var(--surface-2) !important;
+  color: var(--text-secondary) !important;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------------
+   Series: peso × reps, ejercicio de fuerza y detalle de sesión.
+   Cada fila lleva un borde izquierdo que pasa a verde al completarse
+   (reps con valor) — el estado de la serie se ve sin tener que leer.
+   --------------------------------------------------------------------- */
+
+.set-row {
+  border-left: 3px solid var(--border);
+  padding-left: 8px;
+  transition: border-color 0.15s ease;
+}
+
+.set-row.completado {
+  border-left-color: var(--success);
+}
+
+.set-row-num {
+  font-weight: 600;
+  color: var(--text-muted);
+  width: 28px;
+  flex-shrink: 0;
+}
+
+.set-pendiente {
+  color: var(--accent-strong);
+}
+
+.set-logrado {
+  color: var(--success);
+}
+
+/* ---------------------------------------------------------------------
+   Alertas — tono discreto, sin fondo saturado.
+   --------------------------------------------------------------------- */
+
+.alert {
+  border-width: 1px;
 }

@@ -141,7 +141,7 @@ function crearCardSesion(sesion) {
 
   const ejerciciosHtml = Array.from(porEjercicio.entries()).map(([nombre, sets]) => {
     const seriesTexto = sets.map((s) => `${s.weight_kg ?? '—'}kg × ${s.reps}`).join(', ');
-    return `<li class="list-group-item"><strong>${nombre}</strong>: ${seriesTexto}</li>`;
+    return `<li class="list-group-item"><strong>${nombre}</strong>: <span class="stat">${seriesTexto}</span></li>`;
   }).join('');
 
   const cardioHtml = (sesion.cardio_sessions || []).map((c) => {
@@ -149,13 +149,13 @@ function crearCardSesion(sesion) {
     const fc = c.avg_heart_rate ? `FC prom. ${c.avg_heart_rate}` : '';
     const detalles = [`${c.duration_minutes} min`, distancia, fc].filter(Boolean).join(' · ');
     const tipo = c.activity_type === 'eliptica' ? 'Elíptica' : 'Carrera';
-    return `<li class="list-group-item"><strong>${tipo}</strong>: ${detalles}</li>`;
+    return `<li class="list-group-item"><strong>${tipo}</strong>: <span class="stat">${detalles}</span></li>`;
   }).join('');
 
   card.innerHTML = `
     <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-1">
       <span><strong>${etiquetaFecha(sesion.session_date)}</strong> — ${sesion.routine_days?.focus ?? 'Sin día de rutina'}</span>
-      <span class="text-muted small">${energia}</span>
+      <span class="text-muted small stat">${energia}</span>
     </div>
     <ul class="list-group list-group-flush">
       ${ejerciciosHtml}${cardioHtml}

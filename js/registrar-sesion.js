@@ -69,11 +69,14 @@ function crearCardFuerza(ej, idx) {
 
   card.innerHTML = `
     <div class="card-body">
-      <div class="d-flex justify-content-between align-items-center mb-2">
-        <h5 class="card-title mb-0">${ej.name}</h5>
+      <div class="d-flex justify-content-between align-items-start mb-1">
+        <div>
+          <h5 class="card-title mb-0">${ej.name}</h5>
+          <div class="ghost-target">objetivo: ${formatTarget(ej)}</div>
+        </div>
         <button type="button" class="btn btn-sm btn-outline-secondary btn-add-set">+ serie</button>
       </div>
-      <div class="sets-container"></div>
+      <div class="sets-container mt-2"></div>
     </div>
   `;
 
@@ -93,16 +96,18 @@ function crearCardFuerza(ej, idx) {
 
 function crearFilaSet(numeroSerie) {
   const row = document.createElement('div');
-  row.className = 'row g-2 align-items-center mb-2 set-row';
+  row.className = 'd-flex align-items-center gap-2 mb-2 set-row';
   row.innerHTML = `
-    <div class="col-2 text-muted">#${numeroSerie}</div>
-    <div class="col-5">
-      <input type="number" step="0.5" min="0" class="form-control input-peso" placeholder="Peso (kg)">
-    </div>
-    <div class="col-5">
-      <input type="number" step="1" min="0" class="form-control input-reps" placeholder="Reps">
-    </div>
+    <div class="col-2 text-muted set-row-num">#${numeroSerie}</div>
+    <input type="number" step="0.5" min="0" class="form-control input-peso" placeholder="Peso (kg)" style="flex:1;">
+    <input type="number" step="1" min="0" class="form-control input-reps" placeholder="Reps" style="flex:1;">
   `;
+
+  const inputReps = row.querySelector('.input-reps');
+  inputReps.addEventListener('input', () => {
+    row.classList.toggle('completado', inputReps.value !== '');
+  });
+
   return row;
 }
 

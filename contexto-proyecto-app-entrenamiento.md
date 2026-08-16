@@ -1,11 +1,47 @@
 # Contexto del proyecto — App de seguimiento de entrenamiento
 
-## Estado actual (actualizado 2026-08-16)
+## Estado actual (actualizado 2026-08-16, pase de diseño)
+
+**Pase de diseño visual: hecho sobre las 5 pantallas** (login, dashboard,
+registrar sesión, historial, editor de rutina). Dirección confirmada con el
+usuario tras iterar sobre una propuesta inicial:
+
+- **Dirección:** "workbench de gimnasio" — denso, oscuro, un solo acento,
+  pensado para leerse rápido a mitad de una serie en el celular.
+- **Paleta** (en `css/style.css` como variables CSS): base `#18181b`,
+  tarjeta `#222225`, input `#101012` (más oscuro que su entorno — recibe
+  contenido), texto `#e7e7e4` / muted `#8b8b8d` — todo neutro, sin sesgo
+  cálido. Acento ámbar `#d98c3d` (usado con moderación: botones primarios y
+  el estado "necesita tu atención"), verde `#6fa05e` solo para "logrado".
+  **Iteración importante:** la primera propuesta tenía texto y base con tinte
+  cálido además del acento ámbar, y el usuario correctamente señaló que todo
+  "le jalaba al amarillo" — se corrigió neutralizando base/texto y dejando el
+  ámbar como acento aislado, no como temperatura general de la paleta.
+- **Signature del producto:** cada fila de serie en "Registrar sesión"
+  muestra el objetivo del plan como texto fantasma (`objetivo: 3 series
+  6-10 reps`) y el borde izquierdo de la fila pasa de gris a verde en vivo
+  cuando se llenan las reps — la comparación plan-vs-ejecución, que es el
+  concepto central del producto, ahora es visible mientras se registra, no
+  solo después en el historial.
+- **Detalles técnicos:** números (peso, reps, fechas, series) en fuente
+  monospace con `font-variant-numeric: tabular-nums` vía clase `.stat` y
+  `input[type=number]`, para que se lean como un dial y no salten de ancho.
+  Profundidad solo por bordes sutiles y escalón de superficie, sin sombras.
+  `<meta name="color-scheme" content="dark">` en todas las páginas para que
+  los controles nativos (selector de fecha, flechas de `<select>`) también
+  se vean oscuros.
+- Bootstrap se sobreescribe vía variables CSS (`--bs-*`) en `:root` más
+  overrides puntuales donde Bootstrap no cascadea bien (links, badges).
+  No se usa `data-bs-theme` — la app tiene un solo tema fijo, no hay toggle
+  claro/oscuro.
+- Verificado visualmente con capturas de pantalla en las 5 páginas, más la
+  interacción real de llenar una serie y ver el borde cambiar a verde.
+
+## Estado actual — fases previas (actualizado 2026-08-16)
 
 **Fase Historial + Editor de rutina: base funcional hecha y verificada
-end-to-end**, sin pase de diseño todavía (Bootstrap por defecto — a propósito,
-el diseño visual se hace en una pasada aparte sobre todas las pantallas antes
-de meterle mano a Gráficas). Detalle:
+end-to-end** (el pase de diseño de la sección de arriba ya se aplicó también
+aquí). Detalle:
 - `html/historial.html` + `js/historial.js`: sesiones pasadas filtrables por
   fecha (desde/hasta), día de rutina y ejercicio. El filtro por ejercicio se
   resuelve en cliente (una sesión pasa si alguna de sus series usó ese
@@ -83,9 +119,8 @@ contra Supabase real**, no solo revisada por código:
   sesión guardada con el día de rutina mostrado para la zona horaria de
   Centro de México por las noches.
 
-**Sin empezar:** pase de diseño visual (skill `interface-design`, ver
-`skills/SKILL.md`) sobre todas las pantallas, Gráficas (Chart.js), UI de
-`body_measurements`, decisión de hosting. Ver "Qué falta" para más detalle.
+**Sin empezar:** Gráficas (Chart.js), UI de `body_measurements`, decisión de
+hosting. Ver "Qué falta" para más detalle.
 
 ## Qué se está construyendo
 
@@ -199,13 +234,10 @@ automatizado.
 
 ## Qué falta
 
-- **Pase de diseño visual** — orden acordado: base funcional de todas las
-  pantallas (login, dashboard, registrar sesión, historial, editor — listo)
-  → pase de diseño con el skill `interface-design` sobre todas → Gráficas al
-  final, ya con dirección visual definida y más datos acumulados.
 - **Gráficas (Chart.js)** — ninguna de las 5 gráficas del plan está
   implementada; Chart.js ni siquiera está incluido en el proyecto todavía.
-  A propósito después del pase de diseño (ver arriba).
+  Ahora que ya está la dirección visual definida (ver "Estado actual"), este
+  es el siguiente bloque natural a construir.
 - **`body_measurements`** — la tabla existe con RLS, pero no hay ninguna
   pantalla ni formulario para leerla o escribirla.
 - **Recuperación de contraseña** — el formulario de login no tiene flujo de
