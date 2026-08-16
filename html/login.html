@@ -22,15 +22,18 @@
         <label for="email" class="form-label">Email</label>
         <input type="email" class="form-control" id="email" required autocomplete="email">
       </div>
-      <div class="mb-3">
+      <div class="mb-3" id="grupo-password">
         <label for="password" class="form-label">Contraseña</label>
-        <input type="password" class="form-control" id="password" required autocomplete="current-password" minlength="6">
+        <input type="password" class="form-control" id="password" autocomplete="current-password" minlength="6">
       </div>
       <button type="submit" class="btn btn-primary w-100" id="btn-submit">Entrar</button>
     </form>
 
     <p class="text-center mt-3">
       <a href="#" id="toggle-modo">¿No tienes cuenta? Regístrate</a>
+    </p>
+    <p class="text-center mt-1">
+      <a href="#" id="toggle-olvide" class="small">¿Olvidaste tu contraseña?</a>
     </p>
   </div>
 
@@ -39,13 +42,17 @@
   <script src="../js/supabaseClient.js"></script>
   <script src="../js/auth.js"></script>
   <script>
-    let modoRegistro = false;
+    // 'login' | 'registro' | 'recuperar'
+    let modo = 'login';
 
     const form = document.getElementById('form-login');
     const btnSubmit = document.getElementById('btn-submit');
-    const toggle = document.getElementById('toggle-modo');
+    const toggleModo = document.getElementById('toggle-modo');
+    const toggleOlvide = document.getElementById('toggle-olvide');
     const subtitle = document.getElementById('form-subtitle');
     const mensajeError = document.getElementById('mensaje-error');
+    const grupoPassword = document.getElementById('grupo-password');
+    const inputPassword = document.getElementById('password');
 
     // Si ya hay sesión activa, saltar directo al dashboard.
     (async () => {
@@ -53,13 +60,33 @@
       if (session) window.location.href = 'dashboard.html';
     })();
 
-    toggle.addEventListener('click', (e) => {
-      e.preventDefault();
-      modoRegistro = !modoRegistro;
-      btnSubmit.textContent = modoRegistro ? 'Crear cuenta' : 'Entrar';
-      subtitle.textContent = modoRegistro ? 'Crea tu cuenta' : 'Inicia sesión para continuar';
-      toggle.textContent = modoRegistro ? '¿Ya tienes cuenta? Entra' : '¿No tienes cuenta? Regístrate';
+    function actualizarUI() {
+      const textos = {
+        login: { subtitle: 'Inicia sesión para continuar', boton: 'Entrar', toggleModo: '¿No tienes cuenta? Regístrate', toggleOlvide: '¿Olvidaste tu contraseña?' },
+        registro: { subtitle: 'Crea tu cuenta', boton: 'Crear cuenta', toggleModo: '¿Ya tienes cuenta? Entra', toggleOlvide: '¿Olvidaste tu contraseña?' },
+        recuperar: { subtitle: 'Recupera tu contraseña', boton: 'Enviar link de recuperación', toggleModo: '¿No tienes cuenta? Regístrate', toggleOlvide: 'Volver a iniciar sesión' },
+      };
+      const t = textos[modo];
+      subtitle.textContent = t.subtitle;
+      btnSubmit.textContent = t.boton;
+      toggleModo.textContent = t.toggleModo;
+      toggleOlvide.textContent = t.toggleOlvide;
+      toggleModo.parentElement.classList.toggle('d-none', modo === 'recuperar');
+      grupoPassword.classList.toggle('d-none', modo === 'recuperar');
+      inputPassword.required = modo !== 'recuperar';
       mensajeError.classList.add('d-none');
+    }
+
+    toggleModo.addEventListener('click', (e) => {
+      e.preventDefault();
+      modo = modo === 'registro' ? 'login' : 'registro';
+      actualizarUI();
+    });
+
+    toggleOlvide.addEventListener('click', (e) => {
+      e.preventDefault();
+      modo = modo === 'recuperar' ? 'login' : 'recuperar';
+      actualizarUI();
     });
 
     form.addEventListener('submit', async (e) => {
@@ -68,14 +95,21 @@
       btnSubmit.disabled = true;
 
       const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
+      const password = inputPassword.value;
 
       try {
-        if (modoRegistro) {
+        if (modo === 'registro') {
           await signup(email, password);
           mensajeError.classList.remove('d-none', 'alert-danger');
           mensajeError.classList.add('alert-success');
           mensajeError.textContent = 'Cuenta creada. Revisa tu email para confirmar (si aplica) e inicia sesión.';
+        } else if (modo === 'recuperar') {
+          const redirectTo = `${window.location.origin}${window.location.pathname.replace('login.html', 'reset-password.html')}`;
+          const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo });
+          if (error) throw error;
+          mensajeError.classList.remove('d-none', 'alert-danger');
+          mensajeError.classList.add('alert-success');
+          mensajeError.textContent = 'Si el email existe, te llegará un link para restablecer tu contraseña.';
         } else {
           await login(email, password);
           window.location.href = 'dashboard.html';

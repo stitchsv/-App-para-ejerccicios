@@ -1,6 +1,30 @@
 # Contexto del proyecto — App de seguimiento de entrenamiento
 
-## Estado actual (actualizado 2026-08-16, buscador + 3 de 5 gráficas)
+## Estado actual (actualizado 2026-08-16, recuperación de contraseña)
+
+**Recuperación de contraseña: hecha y verificada de punta a punta.**
+`html/login.html` ahora tiene un tercer modo (login/registro/recuperar) con
+el mismo formulario — en modo recuperar oculta el campo de contraseña y
+llama `supabaseClient.auth.resetPasswordForEmail(email, { redirectTo })`.
+El link del correo aterriza en `html/reset-password.html` +
+`js/reset-password.js`, que detecta la sesión de recuperación que
+supabase-js arma sola al procesar el token de la URL (o cualquier sesión
+normal activa — así que también sirve como "cambiar contraseña" estando ya
+logueado) y llama `updateUser({ password })`.
+
+**Pendiente de configuración en Supabase (no es código, es un ajuste en el
+dashboard):** `resetPasswordForEmail` solo funciona si la URL de
+`redirectTo` está en la lista blanca de Authentication → URL Configuration
+→ Redirect URLs. Ahora mismo esa lista probablemente no incluye
+`http://localhost:8765/html/reset-password.html` (ni la URL de producción,
+que todavía no existe — ver "Hosting" en Qué falta). Sin agregar esas URLs
+ahí, el link del correo real fallará aunque el código esté bien. Verificado
+sin gastar el cupo de emails: el toggle de modos, la llamada con un email
+inexistente (Supabase no revela si existe, no manda correo), la pantalla
+sin token, y `updateUser` cambiando la contraseña de verdad (se probó
+cambiándola y regresándola a la original con el usuario oficial).
+
+## Estado actual — buscador + 3 de 5 gráficas (2026-08-16)
 
 **Buscador de ejercicios en vez de combobox largo.** Los `<select>` con
 todos los ejercicios (Progreso, Editor de rutina, filtro de Historial) se
@@ -303,10 +327,13 @@ automatizado.
   y medidas corporales listas en `html/progreso.html`. Faltan: volumen
   semanal por grupo muscular (barras) y cardio (duración/distancia zona 2
   en el tiempo).
-- **Recuperación de contraseña** — el formulario de login no tiene flujo de
-  "olvidé mi contraseña" (relevante porque ya se vivió el problema una vez).
+- **Redirect URL de recuperación en Supabase** — falta agregar
+  `.../html/reset-password.html` (localhost y, luego, la URL de producción)
+  en Authentication → URL Configuration → Redirect URLs, si no el link del
+  correo de recuperación no va a funcionar aunque el código ya esté listo.
 - **Hosting** — sin decidir entre Netlify/Vercel/GitHub Pages; el proyecto
-  solo se ha probado con un servidor estático local.
+  solo se ha probado con un servidor estático local. Una vez decidido,
+  también hay que agregar esa URL al punto anterior.
 - **Confirmación de email** — el proyecto Supabase tiene confirmación de
   email activada por defecto con el mailer integrado, que tiene rate limit
   muy bajo (~2 emails/hora). Vale la pena decidir si se queda así, se
