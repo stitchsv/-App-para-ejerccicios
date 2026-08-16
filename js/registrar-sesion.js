@@ -14,10 +14,21 @@
 const SETS_POR_DEFECTO = 3;
 
 let routineActual = null;
+let usuarioActual = null;
+
+// Fecha local en formato YYYY-MM-DD. Date#toISOString() usa UTC, lo que
+// desalinearía la sesión guardada respecto al día de rutina mostrado
+// (que sí se calcula en hora local) para usuarios detrás de UTC por la noche.
+function fechaLocalISO(date = new Date()) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const user = await requireSession();
-  if (!user) return;
+  usuarioActual = await requireSession();
+  if (!usuarioActual) return;
 
   routineActual = await getTodayRoutine();
 
@@ -146,15 +157,14 @@ async function onSubmit(event) {
   btnSubmit.disabled = true;
 
   try {
-    const { data: { user } } = await supabaseClient.auth.getUser();
     const notas = document.getElementById('notas').value.trim();
     const energyLevel = document.getElementById('energy-level').value;
-    const hoy = new Date().toISOString().slice(0, 10);
+    const hoy = fechaLocalISO();
 
     const { data: sesion, error: sesionError } = await supabaseClient
       .from('workout_sessions')
       .insert({
-        user_id: user.id,
+        user_id: usuarioActual.id,
         session_date: hoy,
         routine_day_id: routineActual.routineDayId,
         energy_level: energyLevel === '' ? null : Number(energyLevel),
@@ -176,7 +186,7 @@ async function onSubmit(event) {
           const reps = row.querySelector('.input-reps').value;
           if (reps === '') return; // sin reps no hay serie válida (reps es not null)
           sets.push({
-            user_id: user.id,
+            user_id: usuarioActual.id,
             session_id: sesion.id,
             exercise_id: exerciseId,
             set_number: i + 1,
@@ -190,7 +200,7 @@ async function onSubmit(event) {
         const distancia = card.querySelector('.input-distancia').value;
         const fc = card.querySelector('.input-fc').value;
         cardioSessions.push({
-          user_id: user.id,
+          user_id: usuarioActual.id,
           session_id: sesion.id,
           cardio_date: hoy,
           activity_type: card.querySelector('.input-activity-type').value,
