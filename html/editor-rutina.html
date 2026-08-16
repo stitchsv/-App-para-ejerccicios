@@ -27,6 +27,7 @@
     <div class="card mb-4">
       <div class="card-header">Catálogo de ejercicios</div>
       <div class="card-body">
+        <div class="d-flex flex-wrap gap-2 mb-3" id="filtro-grupo-muscular"></div>
         <ul class="list-group list-group-flush mb-3" id="lista-catalogo"></ul>
         <form id="form-nuevo-ejercicio" class="row g-2 align-items-end">
           <div class="col-12 col-md-4">
@@ -56,19 +57,19 @@
   </div>
 
   <template id="template-fila-ejercicio">
-    <tr>
-      <td class="nombre-ejercicio"></td>
-      <td><input type="number" step="1" min="0" class="form-control form-control-sm input-sets"></td>
-      <td><input type="number" step="1" min="0" class="form-control form-control-sm input-reps-min"></td>
-      <td><input type="number" step="1" min="0" class="form-control form-control-sm input-reps-max"></td>
-      <td><input type="number" step="1" min="0" class="form-control form-control-sm input-duracion"></td>
-      <td><input type="number" step="1" min="1" class="form-control form-control-sm input-orden"></td>
-      <td><input type="text" class="form-control form-control-sm input-notas"></td>
-      <td class="text-nowrap">
+    <div class="rde-row">
+      <div class="rde-field rde-name nombre-ejercicio"></div>
+      <div class="rde-field"><span class="rde-label">Series</span><input type="number" step="1" min="0" class="form-control form-control-sm input-sets"></div>
+      <div class="rde-field"><span class="rde-label">Reps min</span><input type="number" step="1" min="0" class="form-control form-control-sm input-reps-min"></div>
+      <div class="rde-field"><span class="rde-label">Reps max</span><input type="number" step="1" min="0" class="form-control form-control-sm input-reps-max"></div>
+      <div class="rde-field"><span class="rde-label">Duración (min)</span><input type="number" step="1" min="0" class="form-control form-control-sm input-duracion"></div>
+      <div class="rde-field"><span class="rde-label">Orden</span><input type="number" step="1" min="1" class="form-control form-control-sm input-orden"></div>
+      <div class="rde-field"><span class="rde-label">Notas</span><input type="text" class="form-control form-control-sm input-notas"></div>
+      <div class="rde-actions">
         <button type="button" class="btn btn-sm btn-outline-secondary btn-guardar-fila">Guardar</button>
         <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-fila">Eliminar</button>
-      </td>
-    </tr>
+      </div>
+    </div>
   </template>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

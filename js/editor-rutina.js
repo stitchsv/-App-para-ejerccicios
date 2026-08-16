@@ -8,6 +8,7 @@
 
 let usuarioActual = null;
 let catalogoEjercicios = [];
+let filtroGrupoActual = null; // null = todos los grupos
 
 document.addEventListener('DOMContentLoaded', async () => {
   usuarioActual = await requireSession();
@@ -39,12 +40,39 @@ async function cargarCatalogo() {
   if (error) return mostrarError(error);
 
   catalogoEjercicios = data || [];
+  renderFiltroGrupos();
   renderCatalogo();
+}
+
+// Chips por grupo muscular — el catálogo completo es demasiado largo para
+// mostrarlo siempre entero, así que se filtra por grupo (antebrazo, pecho...).
+function renderFiltroGrupos() {
+  const grupos = [...new Set(catalogoEjercicios.map((ex) => ex.muscle_group))].sort();
+  const contenedor = document.getElementById('filtro-grupo-muscular');
+
+  const chip = (valor, etiqueta) => {
+    const activo = filtroGrupoActual === valor;
+    return `<button type="button" class="chip${activo ? ' activo' : ''}" data-grupo="${valor ?? ''}">${etiqueta}</button>`;
+  };
+
+  contenedor.innerHTML = chip(null, 'Todos') + grupos.map((g) => chip(g, g)).join('');
+
+  contenedor.querySelectorAll('.chip').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      filtroGrupoActual = btn.dataset.grupo || null;
+      renderFiltroGrupos();
+      renderCatalogo();
+    });
+  });
 }
 
 function renderCatalogo() {
   const lista = document.getElementById('lista-catalogo');
-  lista.innerHTML = catalogoEjercicios.map((ex) =>
+  const ejercicios = filtroGrupoActual
+    ? catalogoEjercicios.filter((ex) => ex.muscle_group === filtroGrupoActual)
+    : catalogoEjercicios;
+
+  lista.innerHTML = ejercicios.map((ex) =>
     `<li class="list-group-item d-flex justify-content-between">
       <span>${ex.name}</span>
       <span class="text-muted small">${ex.muscle_group} · ${ex.type}</span>
@@ -128,45 +156,35 @@ function renderDiaCard(dia) {
       </div>
     </div>
     <div class="card-body">
-      <div class="table-responsive">
-        <table class="table table-sm align-middle">
-          <thead>
-            <tr>
-              <th>Ejercicio</th><th>Series</th><th>Reps min</th><th>Reps max</th>
-              <th>Duración (min)</th><th>Orden</th><th>Notas</th><th></th>
-            </tr>
-          </thead>
-          <tbody class="cuerpo-ejercicios"></tbody>
-          <tfoot>
-            <tr>
-              <td colspan="8">
-                <div class="row g-2 align-items-end">
-                  <div class="col-12 col-md-3">
-                    <select class="form-select form-select-sm select-agregar-ejercicio">
-                      <option value="">-- elegir ejercicio --</option>
-                      ${catalogoEjercicios.map((ex) => `<option value="${ex.id}">${ex.name}</option>`).join('')}
-                    </select>
-                  </div>
-                  <div class="col-3 col-md-2">
-                    <input type="number" step="1" min="0" class="form-control form-control-sm nuevo-sets" placeholder="Series">
-                  </div>
-                  <div class="col-3 col-md-2">
-                    <input type="number" step="1" min="0" class="form-control form-control-sm nuevo-reps-min" placeholder="Reps min">
-                  </div>
-                  <div class="col-3 col-md-2">
-                    <input type="number" step="1" min="0" class="form-control form-control-sm nuevo-reps-max" placeholder="Reps max">
-                  </div>
-                  <div class="col-3 col-md-2">
-                    <input type="number" step="1" min="0" class="form-control form-control-sm nuevo-duracion" placeholder="Min">
-                  </div>
-                  <div class="col-12 col-md-1">
-                    <button type="button" class="btn btn-sm btn-outline-primary w-100 btn-agregar-ejercicio">+</button>
-                  </div>
-                </div>
-              </td>
-            </tr>
-          </tfoot>
-        </table>
+      <div class="rde-table">
+        <div class="rde-header">
+          <div>Ejercicio</div><div>Series</div><div>Reps min</div><div>Reps max</div>
+          <div>Duración (min)</div><div>Orden</div><div>Notas</div><div></div>
+        </div>
+        <div class="cuerpo-ejercicios"></div>
+      </div>
+      <div class="row g-2 align-items-end mt-3">
+        <div class="col-12 col-md-3">
+          <select class="form-select form-select-sm select-agregar-ejercicio">
+            <option value="">-- elegir ejercicio --</option>
+            ${catalogoEjercicios.map((ex) => `<option value="${ex.id}">${ex.name}</option>`).join('')}
+          </select>
+        </div>
+        <div class="col-3 col-md-2">
+          <input type="number" step="1" min="0" class="form-control form-control-sm nuevo-sets" placeholder="Series">
+        </div>
+        <div class="col-3 col-md-2">
+          <input type="number" step="1" min="0" class="form-control form-control-sm nuevo-reps-min" placeholder="Reps min">
+        </div>
+        <div class="col-3 col-md-2">
+          <input type="number" step="1" min="0" class="form-control form-control-sm nuevo-reps-max" placeholder="Reps max">
+        </div>
+        <div class="col-3 col-md-2">
+          <input type="number" step="1" min="0" class="form-control form-control-sm nuevo-duracion" placeholder="Min">
+        </div>
+        <div class="col-12 col-md-1">
+          <button type="button" class="btn btn-sm btn-outline-primary w-100 btn-agregar-ejercicio">+</button>
+        </div>
       </div>
     </div>
   `;

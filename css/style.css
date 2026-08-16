@@ -346,3 +346,105 @@ input[type="number"] {
 .alert {
   border-width: 1px;
 }
+
+/* ---------------------------------------------------------------------
+   Tabla de ejercicios del editor de rutina — grid en vez de <table>, para
+   que en pantallas angostas las columnas se apilen en vez de generar
+   scroll horizontal.
+   --------------------------------------------------------------------- */
+
+.rde-header,
+.rde-row {
+  display: grid;
+  grid-template-columns: 1.6fr 0.8fr 0.8fr 0.8fr 0.9fr 0.6fr 1.2fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.rde-header {
+  padding: 0 0 6px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.rde-header > div {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.rde-row {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.rde-row:last-child {
+  border-bottom: none;
+}
+
+.rde-name {
+  font-weight: 500;
+}
+
+.rde-label {
+  display: none;
+}
+
+.rde-actions {
+  display: flex;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .rde-header {
+    display: none;
+  }
+
+  .rde-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 12px;
+  }
+
+  .rde-name {
+    grid-column: 1 / -1;
+  }
+
+  .rde-actions {
+    grid-column: 1 / -1;
+  }
+
+  .rde-label {
+    display: block;
+    margin-bottom: 2px;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Filtro de grupo muscular del catálogo — chips, no lista larga siempre
+   visible entera.
+   --------------------------------------------------------------------- */
+
+.chip {
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  padding: 4px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.chip:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.chip.activo {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #1a1005;
+  font-weight: 500;
+}
