@@ -163,6 +163,30 @@ input[type="date"] {
   color: var(--text-secondary);
 }
 
+/* ---------------------------------------------------------------------
+   Buscador de ejercicios — input + <datalist> nativo en vez de <select>
+   con listas largas. El navegador filtra conforme se escribe.
+   --------------------------------------------------------------------- */
+
+.search-combo {
+  position: relative;
+}
+
+.search-combo input {
+  padding-left: 34px;
+}
+
+.search-combo-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 15px;
+  height: 15px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
 a {
   color: var(--accent-strong);
 }
@@ -447,4 +471,47 @@ input[type="number"] {
   border-color: var(--accent);
   color: #1a1005;
   font-weight: 500;
+}
+
+/* ---------------------------------------------------------------------
+   Heatmap de consistencia — grid de 7 columnas (lunes a domingo), una
+   fila por semana. Días futuros solo llevan contorno, no relleno.
+   --------------------------------------------------------------------- */
+
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.heatmap-cell {
+  aspect-ratio: 1;
+  border-radius: 3px;
+  background: var(--surface-2);
+}
+
+.heatmap-entrenado {
+  background: var(--success);
+}
+
+.heatmap-perdido {
+  background: var(--accent);
+}
+
+.heatmap-sin-plan {
+  background: var(--surface-2);
+}
+
+.heatmap-futuro {
+  background: transparent;
+  border: 1px dashed var(--border);
+}
+
+.heatmap-legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 4px;
+  vertical-align: middle;
 }

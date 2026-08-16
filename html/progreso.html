@@ -21,33 +21,118 @@
   </nav>
 
   <div class="app-container">
-    <h2 class="h4 mb-3">Progreso — fuerza por ejercicio</h2>
+    <h2 class="h4 mb-4">Progreso</h2>
 
-    <div class="mb-3">
-      <label for="select-ejercicio" class="form-label">Ejercicio</label>
-      <select class="form-select" id="select-ejercicio"></select>
-    </div>
+    <!-- ================= Fuerza por ejercicio ================= -->
+    <section class="mb-5">
+      <h3 class="h6 label mb-3">Fuerza por ejercicio</h3>
 
-    <div class="alert alert-danger d-none" id="mensaje-error" role="alert"></div>
-    <div class="alert alert-warning d-none" id="mensaje-sin-datos" role="alert">
-      Todavía no hay series con peso registradas para este ejercicio.
-    </div>
+      <div class="mb-3">
+        <label for="input-ejercicio" class="form-label">Ejercicio</label>
+        <div class="search-combo">
+          <svg class="search-combo-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5"/><path d="M11 11L14.5 14.5"/></svg>
+          <input type="text" class="form-control" id="input-ejercicio" list="datalist-ejercicios" placeholder="Buscar ejercicio…" autocomplete="off">
+          <datalist id="datalist-ejercicios"></datalist>
+        </div>
+      </div>
 
-    <div class="card mb-3" id="card-chart">
-      <div class="card-body">
-        <div class="d-flex gap-4 mb-3">
-          <div>
-            <div class="label">PR</div>
-            <div class="stat fs-4 fw-semibold" id="stat-pr">—</div>
+      <div class="alert alert-danger d-none" id="mensaje-error" role="alert"></div>
+      <div class="alert alert-warning d-none" id="mensaje-sin-datos" role="alert">
+        Todavía no hay series con peso registradas para este ejercicio.
+      </div>
+
+      <div class="card" id="card-chart">
+        <div class="card-body">
+          <div class="d-flex gap-4 mb-3">
+            <div>
+              <div class="label">PR</div>
+              <div class="stat fs-4 fw-semibold" id="stat-pr">—</div>
+            </div>
+            <div>
+              <div class="label">Última sesión</div>
+              <div class="stat fs-4 fw-semibold" id="stat-ultima">—</div>
+            </div>
           </div>
-          <div>
-            <div class="label">Última sesión</div>
-            <div class="stat fs-4 fw-semibold" id="stat-ultima">—</div>
+          <canvas id="chart-progreso" height="220"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= Consistencia ================= -->
+    <section class="mb-5">
+      <h3 class="h6 label mb-3">Consistencia</h3>
+
+      <div class="card">
+        <div class="card-body">
+          <div class="mb-3">
+            <div class="label">Días planeados cumplidos</div>
+            <div class="stat fs-4 fw-semibold" id="stat-consistencia">—</div>
+          </div>
+          <div id="heatmap-consistencia"></div>
+          <div class="d-flex gap-3 mt-3 small text-muted">
+            <span><span class="heatmap-legend-dot heatmap-entrenado"></span> entrenado</span>
+            <span><span class="heatmap-legend-dot heatmap-perdido"></span> planeado, no cumplido</span>
+            <span><span class="heatmap-legend-dot heatmap-sin-plan"></span> sin rutina ese día</span>
           </div>
         </div>
-        <canvas id="chart-progreso" height="220"></canvas>
       </div>
-    </div>
+    </section>
+
+    <!-- ================= Medidas corporales ================= -->
+    <section class="mb-5">
+      <h3 class="h6 label mb-3">Medidas corporales</h3>
+
+      <div class="card mb-3">
+        <div class="card-body">
+          <div class="label mb-2">Nueva medición</div>
+          <form id="form-medida" class="row g-2 align-items-end">
+            <div class="col-6 col-md-2">
+              <label class="form-label small" for="medida-fecha">Fecha</label>
+              <input type="date" class="form-control form-control-sm" id="medida-fecha">
+            </div>
+            <div class="col-6 col-md-3">
+              <label class="form-label small" for="medida-antebrazo">Antebrazo (cm)</label>
+              <input type="number" step="0.1" min="0" class="form-control form-control-sm" id="medida-antebrazo">
+            </div>
+            <div class="col-6 col-md-3">
+              <label class="form-label small" for="medida-biceps">Bíceps (cm)</label>
+              <input type="number" step="0.1" min="0" class="form-control form-control-sm" id="medida-biceps">
+            </div>
+            <div class="col-6 col-md-3">
+              <label class="form-label small" for="medida-peso">Peso corporal (kg)</label>
+              <input type="number" step="0.1" min="0" class="form-control form-control-sm" id="medida-peso">
+            </div>
+            <div class="col-12 col-md-1">
+              <button type="submit" class="btn btn-sm btn-outline-primary w-100">+</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="alert alert-warning d-none" id="mensaje-sin-medidas" role="alert">
+        Todavía no hay medidas registradas.
+      </div>
+
+      <div class="card" id="card-medidas">
+        <div class="card-body">
+          <div class="d-flex gap-4 mb-3">
+            <div>
+              <div class="label">Antebrazo</div>
+              <div class="stat fs-5 fw-semibold" id="stat-antebrazo">—</div>
+            </div>
+            <div>
+              <div class="label">Bíceps</div>
+              <div class="stat fs-5 fw-semibold" id="stat-biceps">—</div>
+            </div>
+            <div>
+              <div class="label">Peso</div>
+              <div class="stat fs-5 fw-semibold" id="stat-peso">—</div>
+            </div>
+          </div>
+          <canvas id="chart-medidas" height="220"></canvas>
+        </div>
+      </div>
+    </section>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -55,6 +140,7 @@
   <script src="../js/config.js"></script>
   <script src="../js/supabaseClient.js"></script>
   <script src="../js/auth.js"></script>
+  <script src="../js/routine-data.js"></script>
   <script src="../js/progreso.js"></script>
 </body>
 </html>

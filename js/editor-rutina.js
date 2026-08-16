@@ -42,6 +42,7 @@ async function cargarCatalogo() {
   catalogoEjercicios = data || [];
   renderFiltroGrupos();
   renderCatalogo();
+  renderDatalistCatalogo();
 }
 
 // Chips por grupo muscular — el catálogo completo es demasiado largo para
@@ -95,19 +96,18 @@ async function onNuevoEjercicio(event) {
 
   document.getElementById('form-nuevo-ejercicio').reset();
   await cargarCatalogo();
-  renderSelectsDeEjercicio();
 }
 
-// Vuelve a poblar los <select> de "agregar ejercicio" de cada día ya
-// renderizado, sin tener que reconstruir las tarjetas completas.
-function renderSelectsDeEjercicio() {
-  document.querySelectorAll('.select-agregar-ejercicio').forEach((select) => {
-    const valorPrevio = select.value;
-    select.innerHTML = '<option value="">-- elegir ejercicio --</option>' + catalogoEjercicios
-      .map((ex) => `<option value="${ex.id}">${ex.name}</option>`)
-      .join('');
-    if (valorPrevio) select.value = valorPrevio;
-  });
+// Datalist compartido por los inputs de "agregar ejercicio" de todos los
+// días — un solo lugar que poblar, en vez de un <select> por tarjeta.
+function renderDatalistCatalogo() {
+  document.getElementById('datalist-catalogo').innerHTML = catalogoEjercicios
+    .map((ex) => `<option value="${ex.name}">`)
+    .join('');
+}
+
+function buscarEjercicioPorNombre(nombre) {
+  return catalogoEjercicios.find((ex) => ex.name === nombre) || null;
 }
 
 // ---------------------------------------------------------------------
@@ -165,10 +165,10 @@ function renderDiaCard(dia) {
       </div>
       <div class="row g-2 align-items-end mt-3">
         <div class="col-12 col-md-3">
-          <select class="form-select form-select-sm select-agregar-ejercicio">
-            <option value="">-- elegir ejercicio --</option>
-            ${catalogoEjercicios.map((ex) => `<option value="${ex.id}">${ex.name}</option>`).join('')}
-          </select>
+          <div class="search-combo">
+            <svg class="search-combo-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5"/><path d="M11 11L14.5 14.5"/></svg>
+            <input type="text" class="form-control form-control-sm input-agregar-ejercicio" list="datalist-catalogo" placeholder="Buscar ejercicio…" autocomplete="off">
+          </div>
         </div>
         <div class="col-3 col-md-2">
           <input type="number" step="1" min="0" class="form-control form-control-sm nuevo-sets" placeholder="Series">
@@ -268,16 +268,16 @@ async function eliminarFilaEjercicio(fila) {
 }
 
 async function agregarEjercicio(routineDayId, card) {
-  const select = card.querySelector('.select-agregar-ejercicio');
-  const exerciseId = select.value;
-  if (!exerciseId) return;
+  const input = card.querySelector('.input-agregar-ejercicio');
+  const ejercicio = buscarEjercicioPorNombre(input.value.trim());
+  if (!ejercicio) return;
 
   const btn = card.querySelector('.btn-agregar-ejercicio');
 
   const payload = {
     user_id: usuarioActual.id,
     routine_day_id: routineDayId,
-    exercise_id: exerciseId,
+    exercise_id: ejercicio.id,
     target_sets: valorONull(card.querySelector('.nuevo-sets')),
     target_reps_min: valorONull(card.querySelector('.nuevo-reps-min')),
     target_reps_max: valorONull(card.querySelector('.nuevo-reps-max')),
@@ -296,6 +296,7 @@ async function agregarEjercicio(routineDayId, card) {
   card.querySelector('.cuerpo-ejercicios').appendChild(renderFilaEjercicio(data));
   btn.dataset.siguienteOrden = Number(btn.dataset.siguienteOrden) + 1;
 
+  input.value = '';
   card.querySelector('.nuevo-sets').value = '';
   card.querySelector('.nuevo-reps-min').value = '';
   card.querySelector('.nuevo-reps-max').value = '';

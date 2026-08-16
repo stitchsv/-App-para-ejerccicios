@@ -1,6 +1,46 @@
 # Contexto del proyecto — App de seguimiento de entrenamiento
 
-## Estado actual (actualizado 2026-08-16, responsive + primera gráfica)
+## Estado actual (actualizado 2026-08-16, buscador + 3 de 5 gráficas)
+
+**Buscador de ejercicios en vez de combobox largo.** Los `<select>` con
+todos los ejercicios (Progreso, Editor de rutina, filtro de Historial) se
+reemplazaron por `input` + `<datalist>` nativo de HTML — el navegador
+filtra conforme se escribe, sin necesitar backend especial (PostgREST de
+Supabase también soporta `ilike` si algún día hace falta filtrar en
+servidor, pero con ~25-50 ejercicios el filtrado en cliente ya es
+instantáneo). Como el valor de un `<datalist>` es el nombre visible, no un
+id, cada página mantiene el catálogo cargado en memoria y resuelve
+nombre → `exercise_id` al vuelo. Nota de testing: los clicks por coordenada
+del navegador de previsualización se traban con el popup nativo del
+datalist (típico de herramientas de automatización); se verificó disparando
+eventos reales sobre los inputs en su lugar — no debería afectar el uso
+normal en un navegador real.
+
+**Gráficas — 3 de 5 hechas** (`html/progreso.html` + `js/progreso.js`,
+ahora reestructurado como el hub único de "Progreso" con tres secciones):
+- **Fuerza por ejercicio** (ya existía).
+- **Consistencia** — heatmap de 8 semanas (grid CSS de 7 columnas, sin
+  librería extra) comparando días *planeados* (el día de la semana tiene
+  al menos un ejercicio en `routine_day_exercises`) contra días
+  *entrenados* (existe `workout_sessions` esa fecha). Días futuros no
+  cuentan en el % de consistencia aunque si hay sesión ese día sí se pintan
+  como entrenados. Stat arriba: "X/Y días planeados cumplidos".
+- **Medidas corporales** — como `body_measurements` no tenía ninguna UI
+  todavía (ninguna forma de meterle datos), se agregó un formulario rápido
+  de "nueva medición" (antebrazo/bíceps/peso) directo en esta sección, para
+  que la gráfica sea probable de punta a punta y no un cascarón vacío
+  permanente. Antebrazo y bíceps comparten eje Y (cm); peso usa un eje Y
+  secundario (kg) porque las escalas no son comparables.
+
+Bug de datos encontrado y corregido en el camino (no del código nuevo): la
+primera sesión de prueba guardada (antes de arreglar el bug de fecha
+UTC/local hace unas iteraciones) había quedado con `session_date` un día
+adelantada; se corrigió el dato directo en Supabase para que el heatmap de
+consistencia calculara bien.
+
+Faltan 2 gráficas: volumen semanal por grupo muscular, cardio.
+
+## Estado actual — buscador + primera gráfica (2026-08-16)
 
 **Editor de rutina — responsive + filtro de catálogo.** La tabla de 8
 columnas causaba scroll horizontal en pantallas angostas; se reemplazó por
@@ -144,8 +184,8 @@ contra Supabase real**, no solo revisada por código:
   sesión guardada con el día de rutina mostrado para la zona horaria de
   Centro de México por las noches.
 
-**Sin empezar:** Gráficas (Chart.js), UI de `body_measurements`, decisión de
-hosting. Ver "Qué falta" para más detalle.
+**Sin empezar:** 2 gráficas (volumen semanal, cardio), decisión de hosting.
+Ver "Qué falta" para más detalle.
 
 ## Qué se está construyendo
 
@@ -259,12 +299,10 @@ automatizado.
 
 ## Qué falta
 
-- **Gráficas (Chart.js) — 1 de 5 hecha.** Progresión de fuerza por ejercicio
-  lista (`html/progreso.html`). Faltan: volumen semanal por grupo muscular
-  (barras), consistencia (heatmap calendario), medidas corporales en el
-  tiempo (línea), cardio (duración/distancia zona 2 en el tiempo).
-- **`body_measurements`** — la tabla existe con RLS, pero no hay ninguna
-  pantalla ni formulario para leerla o escribirla.
+- **Gráficas (Chart.js) — 3 de 5 hechas.** Progresión de fuerza, consistencia
+  y medidas corporales listas en `html/progreso.html`. Faltan: volumen
+  semanal por grupo muscular (barras) y cardio (duración/distancia zona 2
+  en el tiempo).
 - **Recuperación de contraseña** — el formulario de login no tiene flujo de
   "olvidé mi contraseña" (relevante porque ya se vivió el problema una vez).
 - **Hosting** — sin decidir entre Netlify/Vercel/GitHub Pages; el proyecto

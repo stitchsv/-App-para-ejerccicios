@@ -3,6 +3,8 @@
 // Depende de supabaseClient.js, auth.js y routine-data.js (para DIAS_SEMANA
 // y jsDayToDbDay, reutilizados para mostrar el nombre del día de cada sesión).
 
+let catalogoEjercicios = [];
+
 document.addEventListener('DOMContentLoaded', async () => {
   const user = await requireSession();
   if (!user) return;
@@ -56,13 +58,10 @@ async function cargarFiltroEjercicios() {
     .select('id, name')
     .order('name', { ascending: true });
 
-  const select = document.getElementById('filtro-ejercicio');
-  (data || []).forEach((ex) => {
-    const opt = document.createElement('option');
-    opt.value = ex.id;
-    opt.textContent = ex.name;
-    select.appendChild(opt);
-  });
+  catalogoEjercicios = data || [];
+  document.getElementById('datalist-ejercicios').innerHTML = catalogoEjercicios
+    .map((ex) => `<option value="${ex.name}">`)
+    .join('');
 }
 
 async function cargarSesiones() {
@@ -74,7 +73,8 @@ async function cargarSesiones() {
   const desde = document.getElementById('filtro-desde').value;
   const hasta = document.getElementById('filtro-hasta').value;
   const routineDayId = document.getElementById('filtro-dia').value;
-  const exerciseId = document.getElementById('filtro-ejercicio').value;
+  const nombreEjercicio = document.getElementById('filtro-ejercicio').value.trim();
+  const exerciseId = catalogoEjercicios.find((ex) => ex.name === nombreEjercicio)?.id ?? null;
 
   let query = supabaseClient
     .from('workout_sessions')
