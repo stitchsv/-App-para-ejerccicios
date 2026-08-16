@@ -35,7 +35,19 @@
       <div id="lista-ejercicios-form"></div>
 
       <div class="mb-3">
-        <label for="notas" class="form-label">Notas (energía, ajustes del día, etc.)</label>
+        <label for="energy-level" class="form-label">Nivel de energía</label>
+        <select class="form-select" id="energy-level">
+          <option value="">Sin dato</option>
+          <option value="1">1 — muy baja</option>
+          <option value="2">2 — baja</option>
+          <option value="3">3 — normal</option>
+          <option value="4">4 — buena</option>
+          <option value="5">5 — muy buena</option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label for="notas" class="form-label">Notas (contexto, ajustes del día, etc.)</label>
         <textarea class="form-control" id="notas" rows="2"></textarea>
       </div>
 

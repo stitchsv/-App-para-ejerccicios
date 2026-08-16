@@ -18,8 +18,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function renderRoutine(routine) {
-  document.getElementById('dia-nombre').textContent = routine.nombre;
-  document.getElementById('dia-enfoque').textContent = routine.enfoque;
+  document.getElementById('dia-nombre').textContent = routine.dayName;
+  document.getElementById('dia-enfoque').textContent = routine.focus;
 
   const aviso = document.getElementById('aviso-datos-referencia');
   aviso.classList.toggle('d-none', routine.fromDatabase);
@@ -35,8 +35,8 @@ function renderRoutine(routine) {
   routine.ejercicios.forEach((ej) => {
     const li = document.createElement('li');
     li.className = 'list-group-item d-flex justify-content-between align-items-center';
-    const series = ej.series_objetivo ? `${ej.series_objetivo} series objetivo` : 'sin series fijas';
-    li.innerHTML = `<span>${ej.nombre}</span><span class="badge text-bg-secondary rounded-pill">${series}</span>`;
+    const badgeClase = ej.type === 'cardio' ? 'text-bg-info' : 'text-bg-secondary';
+    li.innerHTML = `<span>${ej.name}</span><span class="badge ${badgeClase} rounded-pill">${formatTarget(ej)}</span>`;
     lista.appendChild(li);
   });
 }
