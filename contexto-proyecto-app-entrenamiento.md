@@ -1,6 +1,33 @@
 # Contexto del proyecto — App de seguimiento de entrenamiento
 
-## Estado actual (actualizado 2026-08-15)
+## Estado actual (actualizado 2026-08-16)
+
+**Fase Historial + Editor de rutina: base funcional hecha y verificada
+end-to-end**, sin pase de diseño todavía (Bootstrap por defecto — a propósito,
+el diseño visual se hace en una pasada aparte sobre todas las pantallas antes
+de meterle mano a Gráficas). Detalle:
+- `html/historial.html` + `js/historial.js`: sesiones pasadas filtrables por
+  fecha (desde/hasta), día de rutina y ejercicio. El filtro por ejercicio se
+  resuelve en cliente (una sesión pasa si alguna de sus series usó ese
+  ejercicio); fecha y día de rutina se filtran server-side.
+- `html/editor-rutina.html` + `js/editor-rutina.js`: catálogo de ejercicios
+  (listar + agregar nuevos) y, por cada uno de los 7 días ya sembrados,
+  edición del enfoque/notas y CRUD de `routine_day_exercises` (agregar,
+  editar targets inline, eliminar). No crea ni borra `routine_days` — los 7
+  ya existen por el constraint `unique(user_id, day_of_week)` del seed.
+- Bug real encontrado y corregido durante la prueba: el `<select>` de
+  "agregar ejercicio" no tenía opción en blanco, así que un click accidental
+  en "+" insertaba silenciosamente el primer ejercicio alfabético con targets
+  vacíos. Se agregó una opción `-- elegir ejercicio --` por defecto.
+- Verificado con operaciones reales contra Supabase (guardar fila, agregar,
+  eliminar, editar enfoque de día, agregar ejercicio al catálogo), no solo
+  revisión de código.
+- Nota de testing: en esta sesión el click por coordenadas del navegador de
+  previsualización no registraba de forma confiable (el panel no se estaba
+  renderizando visualmente) — la verificación se hizo disparando eventos
+  reales sobre los elementos (`.click()`) en vez de clicks por pixel.
+
+## Estado actual — fases previas (actualizado 2026-08-15)
 
 **Fase esquema + RLS: hecha.** El esquema completo (`exercises`, `routine_days`,
 `routine_day_exercises`, `workout_sessions`, `session_sets`,
@@ -56,7 +83,8 @@ contra Supabase real**, no solo revisada por código:
   sesión guardada con el día de rutina mostrado para la zona horaria de
   Centro de México por las noches.
 
-**Sin empezar:** Historial, Editor de rutina, Gráficas (Chart.js), UI de
+**Sin empezar:** pase de diseño visual (skill `interface-design`, ver
+`skills/SKILL.md`) sobre todas las pantallas, Gráficas (Chart.js), UI de
 `body_measurements`, decisión de hosting. Ver "Qué falta" para más detalle.
 
 ## Qué se está construyendo
@@ -171,12 +199,13 @@ automatizado.
 
 ## Qué falta
 
-- **Historial** — pantalla de sesiones pasadas filtrable por día/ejercicio/
-  fecha. No existe todavía ni el archivo HTML ni el JS.
-- **Editor de rutina** — pantalla para modificar `routine_days`/
-  `routine_day_exercises` sin tocar SQL directo. No existe todavía.
+- **Pase de diseño visual** — orden acordado: base funcional de todas las
+  pantallas (login, dashboard, registrar sesión, historial, editor — listo)
+  → pase de diseño con el skill `interface-design` sobre todas → Gráficas al
+  final, ya con dirección visual definida y más datos acumulados.
 - **Gráficas (Chart.js)** — ninguna de las 5 gráficas del plan está
   implementada; Chart.js ni siquiera está incluido en el proyecto todavía.
+  A propósito después del pase de diseño (ver arriba).
 - **`body_measurements`** — la tabla existe con RLS, pero no hay ninguna
   pantalla ni formulario para leerla o escribirla.
 - **Recuperación de contraseña** — el formulario de login no tiene flujo de
