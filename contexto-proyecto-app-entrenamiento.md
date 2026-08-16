@@ -1,6 +1,34 @@
 # Contexto del proyecto — App de seguimiento de entrenamiento
 
-## Estado actual (actualizado 2026-08-16, recuperación de contraseña)
+## Estado actual (actualizado 2026-08-16, pulido final pre-deploy)
+
+**Favicon.** `favicon.svg` en la raíz — un barbell simple en el acento
+ámbar sobre fondo `--surface-0`, enlazado desde las 8 páginas
+(`favicon.svg` en `index.html`, `../favicon.svg` desde `html/*.html`).
+
+**Hover/animaciones.** Pase de pulido sobre lo ya construido (sin tocar
+estructura): transiciones de 0.15s en botones/links/chips/inputs, hover con
+tinte de superficie en las filas del editor de rutina (`.rde-row:hover`),
+hover con `scale(1.15)` en las celdas del heatmap de consistencia, y un
+`@media (prefers-reduced-motion: reduce)` que apaga los `transform` pero
+deja las transiciones de color. El botón `.btn:active` ya tenía
+`scale(0.98)` desde el pase de diseño original.
+
+**Auditoría de responsive/buscadores — sin pendientes nuevos.** Se revisó
+que no quedaran `<table>` sueltas (no hay ninguna en el proyecto) ni
+`<select>` largos sin convertir a buscador — los únicos `<select>` que
+quedan son cortos a propósito (día de rutina: 7, energía: 6, tipo de
+cardio: 2, tipo de ejercicio: 3).
+
+**Gráficas: se quedan en 3 de 5** (fuerza, consistencia, medidas
+corporales) — volumen semanal y cardio quedan pendientes sin fecha.
+
+**Siguiente paso: deploy en Vercel** (decisión del usuario, no de Claude).
+Sigue pendiente agregar la URL de producción a Authentication → URL
+Configuration → Redirect URLs en Supabase una vez exista (ver nota de
+recuperación de contraseña más abajo).
+
+## Estado actual — recuperación de contraseña (2026-08-16)
 
 **Recuperación de contraseña: hecha y verificada de punta a punta.**
 `html/login.html` ahora tiene un tercer modo (login/registro/recuperar) con
@@ -233,7 +261,7 @@ con autenticación y RLS "bien hecho" como práctica) para:
   React/Vue). Cliente `supabase-js` para hablar directo con la base de datos
   desde el navegador.
 - **Gráficas:** Chart.js.
-- **Hosting:** estático — Netlify, Vercel o GitHub Pages (a decidir más adelante).
+- **Hosting:** estático en **Vercel** (decidido 2026-08-16).
 - **Autenticación:** Supabase Auth (email/password o magic link). Aunque el uso
   real es de un solo usuario, se implementa auth y RLS correctamente como
   ejercicio de práctica.
@@ -331,9 +359,9 @@ automatizado.
   `.../html/reset-password.html` (localhost y, luego, la URL de producción)
   en Authentication → URL Configuration → Redirect URLs, si no el link del
   correo de recuperación no va a funcionar aunque el código ya esté listo.
-- **Hosting** — sin decidir entre Netlify/Vercel/GitHub Pages; el proyecto
-  solo se ha probado con un servidor estático local. Una vez decidido,
-  también hay que agregar esa URL al punto anterior.
+- **Deploy en Vercel** — decidido, todavía no hecho. El proyecto solo se ha
+  probado con un servidor estático local. Una vez publicado, agregar la URL
+  real al punto anterior (redirect de recuperación en Supabase).
 - **Confirmación de email** — el proyecto Supabase tiene confirmación de
   email activada por defecto con el mailer integrado, que tiene rate limit
   muy bajo (~2 emails/hora). Vale la pena decidir si se queda así, se

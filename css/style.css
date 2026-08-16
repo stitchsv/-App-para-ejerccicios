@@ -147,6 +147,7 @@ input[type="date"] {
   background-color: var(--surface-input);
   border-color: var(--border-strong);
   color: var(--text-primary);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .form-control::placeholder {
@@ -189,6 +190,7 @@ input[type="date"] {
 
 a {
   color: var(--accent-strong);
+  transition: color 0.15s ease;
 }
 
 a:hover {
@@ -211,6 +213,7 @@ input[type="number"] {
 .btn {
   border-radius: var(--radius-md);
   box-shadow: none !important;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
 }
 
 .btn-primary {
@@ -402,10 +405,15 @@ input[type="number"] {
 .rde-row {
   padding: 10px 0;
   border-bottom: 1px solid var(--border);
+  transition: background-color 0.15s ease;
 }
 
 .rde-row:last-child {
   border-bottom: none;
+}
+
+.rde-row:hover {
+  background-color: var(--surface-1);
 }
 
 .rde-name {
@@ -459,6 +467,7 @@ input[type="number"] {
   padding: 4px 12px;
   border-radius: 999px;
   cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .chip:hover {
@@ -488,6 +497,12 @@ input[type="number"] {
   aspect-ratio: 1;
   border-radius: 3px;
   background: var(--surface-2);
+  transition: transform 0.1s ease;
+}
+
+.heatmap-cell:hover {
+  transform: scale(1.15);
+  outline: 1px solid var(--border-strong);
 }
 
 .heatmap-entrenado {
@@ -514,4 +529,16 @@ input[type="number"] {
   border-radius: 2px;
   margin-right: 4px;
   vertical-align: middle;
+}
+
+/* ---------------------------------------------------------------------
+   Movimiento reducido — se mantienen las transiciones de color, se
+   quitan los efectos que dependen de escala/transform.
+   --------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .btn:active,
+  .heatmap-cell:hover {
+    transform: none;
+  }
 }
