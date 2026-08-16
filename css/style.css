@@ -1,0 +1,30 @@
+/* Ajustes propios encima de Bootstrap 5. Pensado para usarse desde el
+   celular en el gimnasio: inputs y botones grandes, poco scroll. */
+
+body {
+  background-color: #f8f9fa;
+  padding-bottom: 3rem;
+}
+
+.app-container {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.form-control,
+.btn {
+  font-size: 1.05rem;
+}
+
+input[type="number"] {
+  text-align: center;
+}
+
+.set-row .col-2 {
+  font-weight: 600;
+}
+
+.navbar-brand {
+  font-weight: 600;
+}
