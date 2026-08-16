@@ -1,243 +1,10 @@
 # Contexto del proyecto — App de seguimiento de entrenamiento
 
-## Estado actual (actualizado 2026-08-16, pulido final pre-deploy)
-
-**Favicon.** `favicon.svg` en la raíz — un barbell simple en el acento
-ámbar sobre fondo `--surface-0`, enlazado desde las 8 páginas
-(`favicon.svg` en `index.html`, `../favicon.svg` desde `html/*.html`).
-
-**Hover/animaciones.** Pase de pulido sobre lo ya construido (sin tocar
-estructura): transiciones de 0.15s en botones/links/chips/inputs, hover con
-tinte de superficie en las filas del editor de rutina (`.rde-row:hover`),
-hover con `scale(1.15)` en las celdas del heatmap de consistencia, y un
-`@media (prefers-reduced-motion: reduce)` que apaga los `transform` pero
-deja las transiciones de color. El botón `.btn:active` ya tenía
-`scale(0.98)` desde el pase de diseño original.
-
-**Auditoría de responsive/buscadores — sin pendientes nuevos.** Se revisó
-que no quedaran `<table>` sueltas (no hay ninguna en el proyecto) ni
-`<select>` largos sin convertir a buscador — los únicos `<select>` que
-quedan son cortos a propósito (día de rutina: 7, energía: 6, tipo de
-cardio: 2, tipo de ejercicio: 3).
-
-**Gráficas: se quedan en 3 de 5** (fuerza, consistencia, medidas
-corporales) — volumen semanal y cardio quedan pendientes sin fecha.
-
-**Siguiente paso: deploy en Vercel** (decisión del usuario, no de Claude).
-Sigue pendiente agregar la URL de producción a Authentication → URL
-Configuration → Redirect URLs en Supabase una vez exista (ver nota de
-recuperación de contraseña más abajo).
-
-## Estado actual — recuperación de contraseña (2026-08-16)
-
-**Recuperación de contraseña: hecha y verificada de punta a punta.**
-`html/login.html` ahora tiene un tercer modo (login/registro/recuperar) con
-el mismo formulario — en modo recuperar oculta el campo de contraseña y
-llama `supabaseClient.auth.resetPasswordForEmail(email, { redirectTo })`.
-El link del correo aterriza en `html/reset-password.html` +
-`js/reset-password.js`, que detecta la sesión de recuperación que
-supabase-js arma sola al procesar el token de la URL (o cualquier sesión
-normal activa — así que también sirve como "cambiar contraseña" estando ya
-logueado) y llama `updateUser({ password })`.
-
-**Pendiente de configuración en Supabase (no es código, es un ajuste en el
-dashboard):** `resetPasswordForEmail` solo funciona si la URL de
-`redirectTo` está en la lista blanca de Authentication → URL Configuration
-→ Redirect URLs. Ahora mismo esa lista probablemente no incluye
-`http://localhost:8765/html/reset-password.html` (ni la URL de producción,
-que todavía no existe — ver "Hosting" en Qué falta). Sin agregar esas URLs
-ahí, el link del correo real fallará aunque el código esté bien. Verificado
-sin gastar el cupo de emails: el toggle de modos, la llamada con un email
-inexistente (Supabase no revela si existe, no manda correo), la pantalla
-sin token, y `updateUser` cambiando la contraseña de verdad (se probó
-cambiándola y regresándola a la original con el usuario oficial).
-
-## Estado actual — buscador + 3 de 5 gráficas (2026-08-16)
-
-**Buscador de ejercicios en vez de combobox largo.** Los `<select>` con
-todos los ejercicios (Progreso, Editor de rutina, filtro de Historial) se
-reemplazaron por `input` + `<datalist>` nativo de HTML — el navegador
-filtra conforme se escribe, sin necesitar backend especial (PostgREST de
-Supabase también soporta `ilike` si algún día hace falta filtrar en
-servidor, pero con ~25-50 ejercicios el filtrado en cliente ya es
-instantáneo). Como el valor de un `<datalist>` es el nombre visible, no un
-id, cada página mantiene el catálogo cargado en memoria y resuelve
-nombre → `exercise_id` al vuelo. Nota de testing: los clicks por coordenada
-del navegador de previsualización se traban con el popup nativo del
-datalist (típico de herramientas de automatización); se verificó disparando
-eventos reales sobre los inputs en su lugar — no debería afectar el uso
-normal en un navegador real.
-
-**Gráficas — 3 de 5 hechas** (`html/progreso.html` + `js/progreso.js`,
-ahora reestructurado como el hub único de "Progreso" con tres secciones):
-- **Fuerza por ejercicio** (ya existía).
-- **Consistencia** — heatmap de 8 semanas (grid CSS de 7 columnas, sin
-  librería extra) comparando días *planeados* (el día de la semana tiene
-  al menos un ejercicio en `routine_day_exercises`) contra días
-  *entrenados* (existe `workout_sessions` esa fecha). Días futuros no
-  cuentan en el % de consistencia aunque si hay sesión ese día sí se pintan
-  como entrenados. Stat arriba: "X/Y días planeados cumplidos".
-- **Medidas corporales** — como `body_measurements` no tenía ninguna UI
-  todavía (ninguna forma de meterle datos), se agregó un formulario rápido
-  de "nueva medición" (antebrazo/bíceps/peso) directo en esta sección, para
-  que la gráfica sea probable de punta a punta y no un cascarón vacío
-  permanente. Antebrazo y bíceps comparten eje Y (cm); peso usa un eje Y
-  secundario (kg) porque las escalas no son comparables.
-
-Bug de datos encontrado y corregido en el camino (no del código nuevo): la
-primera sesión de prueba guardada (antes de arreglar el bug de fecha
-UTC/local hace unas iteraciones) había quedado con `session_date` un día
-adelantada; se corrigió el dato directo en Supabase para que el heatmap de
-consistencia calculara bien.
-
-Faltan 2 gráficas: volumen semanal por grupo muscular, cardio.
-
-## Estado actual — buscador + primera gráfica (2026-08-16)
-
-**Editor de rutina — responsive + filtro de catálogo.** La tabla de 8
-columnas causaba scroll horizontal en pantallas angostas; se reemplazó por
-un grid CSS (`.rde-row`/`.rde-header` en `css/style.css`) que en desktop se
-ve como tabla y por debajo de 700px se apila en 2 columnas con etiqueta por
-campo — verificado sin overflow a 375px, 408px y 1280px. El catálogo de
-ejercicios (25 y creciendo) ahora tiene chips de filtro por grupo muscular
-arriba de la lista en vez de mostrarla siempre completa.
-
-**Gráficas — arrancó con "progresión de fuerza por ejercicio"
-(`html/progreso.html` + `js/progreso.js`).** Chart.js vía CDN (sin build
-tools, igual que el resto del stack). Selector de ejercicio (solo
-`fuerza`/`pliometria` — cardio no tiene peso), gráfica de línea del peso
-máximo levantado por fecha de sesión (consulta `session_sets` con join a
-`workout_sessions` para la fecha, agrupa por fecha en cliente), más dos
-stats simples arriba (PR histórico, peso de la última sesión). Colores de
-la gráfica leídos de las variables CSS del sistema de diseño
-(`getComputedStyle`), no hardcodeados, para no duplicar la paleta. Faltan
-las otras 4 gráficas del plan (volumen semanal, consistencia, medidas
-corporales, cardio) — quedan para después, mismo patrón.
-
-Se agregó el link "Progreso" a la navegación de dashboard, historial y
-editor de rutina.
-
-## Estado actual — pase de diseño (actualizado 2026-08-16)
-
-**Pase de diseño visual: hecho sobre las 5 pantallas** (login, dashboard,
-registrar sesión, historial, editor de rutina). Dirección confirmada con el
-usuario tras iterar sobre una propuesta inicial:
-
-- **Dirección:** "workbench de gimnasio" — denso, oscuro, un solo acento,
-  pensado para leerse rápido a mitad de una serie en el celular.
-- **Paleta** (en `css/style.css` como variables CSS): base `#18181b`,
-  tarjeta `#222225`, input `#101012` (más oscuro que su entorno — recibe
-  contenido), texto `#e7e7e4` / muted `#8b8b8d` — todo neutro, sin sesgo
-  cálido. Acento ámbar `#d98c3d` (usado con moderación: botones primarios y
-  el estado "necesita tu atención"), verde `#6fa05e` solo para "logrado".
-  **Iteración importante:** la primera propuesta tenía texto y base con tinte
-  cálido además del acento ámbar, y el usuario correctamente señaló que todo
-  "le jalaba al amarillo" — se corrigió neutralizando base/texto y dejando el
-  ámbar como acento aislado, no como temperatura general de la paleta.
-- **Signature del producto:** cada fila de serie en "Registrar sesión"
-  muestra el objetivo del plan como texto fantasma (`objetivo: 3 series
-  6-10 reps`) y el borde izquierdo de la fila pasa de gris a verde en vivo
-  cuando se llenan las reps — la comparación plan-vs-ejecución, que es el
-  concepto central del producto, ahora es visible mientras se registra, no
-  solo después en el historial.
-- **Detalles técnicos:** números (peso, reps, fechas, series) en fuente
-  monospace con `font-variant-numeric: tabular-nums` vía clase `.stat` y
-  `input[type=number]`, para que se lean como un dial y no salten de ancho.
-  Profundidad solo por bordes sutiles y escalón de superficie, sin sombras.
-  `<meta name="color-scheme" content="dark">` en todas las páginas para que
-  los controles nativos (selector de fecha, flechas de `<select>`) también
-  se vean oscuros.
-- Bootstrap se sobreescribe vía variables CSS (`--bs-*`) en `:root` más
-  overrides puntuales donde Bootstrap no cascadea bien (links, badges).
-  No se usa `data-bs-theme` — la app tiene un solo tema fijo, no hay toggle
-  claro/oscuro.
-- Verificado visualmente con capturas de pantalla en las 5 páginas, más la
-  interacción real de llenar una serie y ver el borde cambiar a verde.
-
-## Estado actual — fases previas (actualizado 2026-08-16)
-
-**Fase Historial + Editor de rutina: base funcional hecha y verificada
-end-to-end** (el pase de diseño de la sección de arriba ya se aplicó también
-aquí). Detalle:
-- `html/historial.html` + `js/historial.js`: sesiones pasadas filtrables por
-  fecha (desde/hasta), día de rutina y ejercicio. El filtro por ejercicio se
-  resuelve en cliente (una sesión pasa si alguna de sus series usó ese
-  ejercicio); fecha y día de rutina se filtran server-side.
-- `html/editor-rutina.html` + `js/editor-rutina.js`: catálogo de ejercicios
-  (listar + agregar nuevos) y, por cada uno de los 7 días ya sembrados,
-  edición del enfoque/notas y CRUD de `routine_day_exercises` (agregar,
-  editar targets inline, eliminar). No crea ni borra `routine_days` — los 7
-  ya existen por el constraint `unique(user_id, day_of_week)` del seed.
-- Bug real encontrado y corregido durante la prueba: el `<select>` de
-  "agregar ejercicio" no tenía opción en blanco, así que un click accidental
-  en "+" insertaba silenciosamente el primer ejercicio alfabético con targets
-  vacíos. Se agregó una opción `-- elegir ejercicio --` por defecto.
-- Verificado con operaciones reales contra Supabase (guardar fila, agregar,
-  eliminar, editar enfoque de día, agregar ejercicio al catálogo), no solo
-  revisión de código.
-- Nota de testing: en esta sesión el click por coordenadas del navegador de
-  previsualización no registraba de forma confiable (el panel no se estaba
-  renderizando visualmente) — la verificación se hizo disparando eventos
-  reales sobre los elementos (`.click()`) en vez de clicks por pixel.
-
-## Estado actual — fases previas (actualizado 2026-08-15)
-
-**Fase esquema + RLS: hecha.** El esquema completo (`exercises`, `routine_days`,
-`routine_day_exercises`, `workout_sessions`, `session_sets`,
-`body_measurements`, `cardio_sessions`) ya está corrido en el proyecto real de
-Supabase (ref `utdyofyxdszqkebaenap`), con RLS activo y policy
-`auth.uid() = user_id` en cada tabla. Versionado en
-`supabase/migrations/20260815120000_initial_schema.sql` (schema) y
-`supabase/migrations/20260816000000_seed_reference_routine.sql` (seed) —
-estos archivos documentan lo que ya está corrido en Supabase, no se han vuelto
-a ejecutar contra el proyecto real desde que se crearon (no hay CLI de
-Supabase conectada todavía).
-
-**Usuario oficial (por ahora):** `guzmanmoraneduardo+test@gmail.com`
-(id `1a47dd9b-98ac-443f-9d19-ac3d1e7c3f5b`). Es el usuario con el que se
-sembró la rutina y se probó todo el flujo end-to-end. El usuario original de
-la primera corrida del seed quedó huérfano (password desconocida, sin poder
-resetear por rate limit de email) — no tiene datos que migrar ni se usa en
-ningún lado del código.
-
-**Fase frontend estructura: hecha.** `index.html` (raíz, redirige según
-sesión) + `css/` + `js/` + `html/` con `login.html`, `dashboard.html` ("Hoy")
-y `registrar-sesion.html`. Vanilla JS + Bootstrap 5 + `supabase-js` v2 vía
-CDN, sin build tools, tal como decide el stack técnico.
-
-**Fase auth/RLS + CRUD básico + registro de sesión: verificada end-to-end
-contra Supabase real**, no solo revisada por código:
-- Signup → confirmación de email → login → dashboard → registrar sesión,
-  probado completo con un usuario de prueba real
-  (`guzmanmoraneduardo+test@gmail.com`).
-- El dashboard "Hoy" lee `routine_days`/`routine_day_exercises`/`exercises`
-  reales (día de la semana mapeado correctamente: la BD usa 1=lunes...7=domingo,
-  el frontend convierte desde `Date.getDay()`). Si un usuario no tiene rutina
-  sembrada para hoy, cae a una rutina de referencia local (los mismos valores
-  de este documento) en vez de romperse — pensado para desarrollo, no debería
-  activarse una vez que todo usuario real tenga su rutina sembrada.
-- El formulario de registro separa automáticamente ejercicios de fuerza/
-  pliometría (guardan series peso×reps en `session_sets`) de cardio (guardan
-  duración/distancia/FC en `cardio_sessions`), porque `session_sets.reps` es
-  `not null` y no tiene columna de duración. Confirmado insertando datos
-  reales y verificando que llegaron a las tablas correctas.
-- RLS confirmado funcionando: un usuario nuevo sin rutina sembrada no ve datos
-  de otros usuarios (dashboard cae al fallback local en vez de mostrar datos
-  ajenos).
-- Credenciales reales en `js/config.js` (gitignorado; plantilla en
-  `js/config.example.js`), cargado antes de `js/supabaseClient.js` — el
-  proyecto no usa bundler, así que el navegador no puede leer `.env`
-  directamente.
-- Dos bugs encontrados y corregidos durante la prueba: `registrar-sesion.js`
-  volvía a pedir el usuario con `getUser()` dentro de `onSubmit` en vez de
-  reusar el de `requireSession()` (crasheaba si el token rotaba entre cargar
-  la página y enviar el formulario); y `session_date`/`cardio_date` se
-  guardaban en UTC (`toISOString()`) en vez de fecha local, desalineando la
-  sesión guardada con el día de rutina mostrado para la zona horaria de
-  Centro de México por las noches.
-
-**Sin empezar:** 2 gráficas (volumen semanal, cardio), decisión de hosting.
-Ver "Qué falta" para más detalle.
+> Este documento es la fuente de verdad para retomar el proyecto en una
+> sesión nueva de Claude sin contexto previo. Está escrito como estado
+> actual, no como bitácora — para el historial de cómo se llegó aquí, usa
+> `git log` (cada commit es una unidad de trabajo verificada y explicada en
+> su propio mensaje).
 
 ## Qué se está construyendo
 
@@ -256,71 +23,221 @@ con autenticación y RLS "bien hecho" como práctica) para:
 
 - **Backend/datos:** Supabase (Postgres + Auth + API REST autogenerada vía
   PostgREST). Row Level Security (RLS) activo en todas las tablas con datos
-  del usuario.
+  del usuario. Proyecto real: ref `utdyofyxdszqkebaenap`.
 - **Frontend:** HTML + Bootstrap 5 + JavaScript vanilla (sin framework tipo
-  React/Vue). Cliente `supabase-js` para hablar directo con la base de datos
-  desde el navegador.
-- **Gráficas:** Chart.js.
-- **Hosting:** estático en **Vercel** (decidido 2026-08-16).
-- **Autenticación:** Supabase Auth (email/password o magic link). Aunque el uso
-  real es de un solo usuario, se implementa auth y RLS correctamente como
-  ejercicio de práctica.
+  React/Vue, sin build tools). Cliente `supabase-js` v2 vía CDN para hablar
+  directo con la base de datos desde el navegador.
+- **Gráficas:** Chart.js vía CDN.
+- **Hosting:** estático en **Vercel** — decidido, repo ya empujado a GitHub
+  (`stitchsv/-App-para-ejerccicios`, rama `master`), deploy en Vercel todavía
+  no confirmado por el usuario (ver "Qué falta").
+- **Autenticación:** Supabase Auth (email/password). Aunque el uso real es de
+  un solo usuario, se implementa auth y RLS correctamente como ejercicio de
+  práctica.
 
-## Modelo de datos (implementado en Supabase; nombres de columna reales)
+## Estado actual — resumen ejecutivo
 
-Ya no es borrador: este esquema está corrido y sembrado en el proyecto real,
-y versionado en `supabase/migrations/`. Los nombres de columna reales (usados
-por el frontend) difieren un poco de la descripción conceptual de abajo —
-por ejemplo `routine_days.focus` (no "enfoque"), `exercises.name` (no
-"nombre"), `workout_sessions.session_date` (no "fecha"),
-`session_sets.weight_kg`/`reps`/`set_number` (no "peso"/"orden"). Para los
-nombres exactos, revisar el SQL en `supabase/migrations/` directamente en vez
-de esta descripción conceptual.
+**Las 7 pantallas del flujo están construidas, con diseño visual aplicado, y
+verificadas end-to-end contra el proyecto real de Supabase** (no solo
+revisadas por código — cada feature se probó insertando/editando/borrando
+datos reales y confirmando en la UI y/o directo en la base). Falta: 2 de 5
+gráficas, y publicar el deploy en Vercel (ver "Qué falta" para el detalle
+completo).
 
-- `exercises` — catálogo de ejercicios: nombre, grupo muscular, tipo
-  (fuerza / cardio / pliometría).
-- `routine_days` — plantilla semanal fija (lunes = espalda/tríceps, martes =
-  antebrazo/abdomen/cardio, etc.).
-- `routine_day_exercises` — qué ejercicios van en cada día de la plantilla,
-  con series objetivo (el "plan ideal").
-- `workout_sessions` — cada sesión real: fecha, día de rutina asociado, notas
-  generales (energía, contexto, ajustes del día).
-- `session_sets` — detalle real por serie: ejercicio, peso, reps, RPE/sensación
-  opcional. Aquí vive el progreso real.
-- `body_measurements` (opcional) — circunferencia de antebrazo, bíceps, peso
-  corporal, fecha. Relevante porque uno de los objetivos es estético
-  (antebrazo/brazos).
-- `cardio_sessions` — elíptica y carrera: duración, distancia, zona/frecuencia
-  cardiaca si se mide.
+- **Esquema + RLS**: corrido y sembrado en Supabase, versionado en
+  `supabase/migrations/`.
+- **Auth completa**: login, registro, confirmación de email, y recuperación
+  de contraseña.
+- **CRUD de rutina y sesiones**: dashboard "Hoy", registrar sesión, historial
+  filtrable, editor de rutina.
+- **Gráficas**: 3 de 5 (fuerza por ejercicio, consistencia, medidas
+  corporales) en una sola pantalla "Progreso".
+- **Sistema de diseño propio** ("workbench de gimnasio") aplicado a las 8
+  páginas, con favicon y pulido de hover/animaciones.
+- **Buscador de ejercicios** (input + `<datalist>`) en vez de `<select>`
+  largos, y tablas responsive (grid CSS, sin scroll horizontal) — auditado,
+  sin pendientes de este tipo.
 
-Cada tabla con datos personales lleva columna `user_id` y policy de RLS
-`auth.uid() = user_id`.
+## Estructura del repo
+
+```
+index.html                    # entrada: redirige a html/dashboard.html o html/login.html según sesión
+favicon.svg                   # barbell simple en el acento ámbar
+css/style.css                 # todo el sistema de diseño (ver sección abajo)
+js/
+  config.js                   # credenciales reales de Supabase (versionado a propósito, ver nota abajo)
+  config.example.js           # plantilla de config.js
+  supabaseClient.js           # crea `supabaseClient` (createClient), depende de config.js
+  auth.js                     # login/signup/logout/requireSession(), usado por todas las páginas protegidas
+  routine-data.js             # DIAS_SEMANA, jsDayToDbDay(), getTodayRoutine() con fallback local
+  dashboard.js                # lógica de html/dashboard.html
+  registrar-sesion.js         # lógica de html/registrar-sesion.html
+  historial.js                # lógica de html/historial.html
+  editor-rutina.js            # lógica de html/editor-rutina.html
+  progreso.js                 # lógica de html/progreso.html (3 gráficas)
+  reset-password.js           # lógica de html/reset-password.html
+html/
+  login.html                  # login/registro/recuperar contraseña (3 modos en un formulario)
+  dashboard.html               # "Hoy": rutina del día según fecha real
+  registrar-sesion.html        # registro rápido de series (peso×reps) + cardio
+  historial.html               # sesiones pasadas filtrables
+  editor-rutina.html           # catálogo de ejercicios + CRUD de routine_day_exercises
+  progreso.html                 # fuerza / consistencia / medidas corporales
+  reset-password.html          # donde aterriza el link de recuperación de contraseña
+supabase/migrations/
+  20260815120000_initial_schema.sql       # las 7 tablas + RLS (documenta lo ya corrido en Supabase)
+  20260816000000_seed_reference_routine.sql # catálogo + rutina de referencia para el usuario oficial
+skills/SKILL.md               # skill "interface-design" del usuario — cargar antes de tocar CSS/UI
+```
+
+**Nota sobre `js/config.js`:** está versionado a propósito (no gitignorado).
+Contiene la URL y anon key reales de Supabase, pero la anon key está
+diseñada para exponerse en el cliente — la protege RLS, no es un secreto —
+así que el repo es deployable tal cual en Vercel/Netlify/GitHub Pages sin
+variables de entorno ni build step. `.env` sigue gitignorado (es solo un
+respaldo de referencia, el código no lo lee).
+
+## Modelo de datos
+
+7 tablas, cada una con `user_id` + policy RLS `auth.uid() = user_id`:
+`exercises`, `routine_days`, `routine_day_exercises`, `workout_sessions`,
+`session_sets`, `body_measurements`, `cardio_sessions`. **Para los nombres
+de columna exactos, leer `supabase/migrations/20260815120000_initial_schema.sql`
+directamente** — no asumir desde el nombre conceptual (ej. es
+`routine_days.focus` no "enfoque", `exercises.name` no "nombre",
+`workout_sessions.session_date` no "fecha", `session_sets.weight_kg`/`reps`/
+`set_number` no "peso"/"orden").
+
+Puntos no obvios del esquema:
+- `routine_days.day_of_week` va de **1 (lunes) a 7 (domingo)** — el frontend
+  convierte desde `Date.getDay()` de JS (0=domingo) con `jsDayToDbDay()` en
+  `js/routine-data.js`.
+- `session_sets.reps` es `not null` y no tiene columna de duración — por eso
+  los ejercicios de tipo `cardio` (Elíptica, Carrera suave) se guardan en
+  `cardio_sessions` en vez de `session_sets`.
+- `routine_day_exercises` tiene `target_sets`/`target_reps_min`/
+  `target_reps_max` (fuerza) **o** `target_duration_minutes` (cardio) — no
+  ambos a la vez normalmente.
 
 La relación clave del producto es **plan (`routine_day_exercises`) vs.
-ejecución (`session_sets`)** — es el mismo ejercicio de comparar "lo que debía
-hacer" contra "lo que realmente hice" que se ha estado haciendo manualmente
-en la conversación (bajar peso, no completar series, mover días, etc.), ahora
-automatizado.
+ejecución (`session_sets`)** — comparar "lo que debía hacer" contra "lo que
+realmente hice". Esa comparación es literal y visible en pantalla: en
+"Registrar sesión", cada fila de serie muestra el objetivo del plan como
+texto fantasma y el borde izquierdo pasa a verde en vivo al completarse.
 
-## Pantallas / flujo esperado
+**Usuario oficial (por ahora):** `guzmanmoraneduardo+test@gmail.com`
+(id `1a47dd9b-98ac-443f-9d19-ac3d1e7c3f5b`). Es el único usuario con rutina
+sembrada y con el que se probó todo el flujo. Hay un usuario huérfano de la
+primera corrida del seed (password desconocida, sin poder resetear por rate
+limit de email) — no tiene datos ni se usa en ningún lado del código, se
+puede ignorar o borrar desde el dashboard de Supabase.
 
-1. Login/registro.
-2. Dashboard/"Hoy" — qué día de rutina toca según la fecha, con ejercicios y
-   series objetivo listos para registrar.
-3. Registrar sesión — formulario rápido pensado para usarse desde el celular
-   en el gimnasio (peso x reps por serie).
-4. Historial — sesiones pasadas, filtrable por día/ejercicio/fecha.
-5. Progreso/Gráficas (ver abajo).
-6. Editor de rutina — para modificar la plantilla sin tocar código.
+## Sistema de diseño — "workbench de gimnasio"
 
-## Gráficas necesarias
+Dirección confirmada con el usuario (iterando sobre una propuesta inicial que
+tiraba demasiado a cálido/amarillo — corregida a neutro con el ámbar como
+único acento aislado). Denso, oscuro, sin adornos — pensado para leerse
+rápido a mitad de una serie en el celular. Todo vive en `css/style.css` como
+variables CSS, sobreescribiendo Bootstrap vía sus propias variables (`--bs-*`)
+en `:root` más overrides puntuales donde Bootstrap no cascadea bien. No hay
+`data-bs-theme` ni toggle claro/oscuro — un solo tema fijo.
 
-- Progresión de fuerza por ejercicio (peso máximo o 1RM estimado en el tiempo).
-- Volumen semanal por grupo muscular (barras), para verificar que antebrazo y
-  bíceps mantienen la frecuencia 2 planeada.
-- Consistencia: heatmap tipo calendario (días entrenados vs. planeados).
-- Medidas corporales en el tiempo (línea).
-- Cardio (duración/distancia de zona 2 en el tiempo).
+- **Superficies** (escalón, sin sombras): base `#18181b` → tarjeta `#222225`
+  → input `#101012` (más oscuro — recibe contenido, no un peldaño hacia arriba).
+- **Texto**: primario `#e7e7e4`, muted `#8b8b8d` — neutros, sin sesgo cálido.
+- **Acento único**: ámbar `#d98c3d` / `#e6a15c` (hover) — botones primarios y
+  estado "necesita tu atención". Verde `#6fa05e` solo para "logrado". Nada
+  más lleva color.
+- **Números** (peso, reps, fechas, series) en fuente monospace con
+  `font-variant-numeric: tabular-nums` (clase `.stat`, y `input[type=number]`
+  globalmente) — se leen como un dial, no saltan de ancho.
+- **Buscador de ejercicios**: `input` + `<datalist>` nativo (clase
+  `.search-combo`) en vez de `<select>` largos — el navegador filtra
+  conforme se escribe, sin backend especial.
+- **Tablas responsive**: grid CSS (`.rde-row`/`.rde-header`), no `<table>` —
+  se ve como tabla en desktop y se apila en 2 columnas con etiqueta por
+  campo por debajo de 700px. No hay ningún `<table>` en el proyecto.
+- **Movimiento**: transiciones de 0.15s en botones/links/chips/inputs,
+  `.btn:active { scale(0.98) }`, hover con `scale(1.15)` en el heatmap,
+  `@media (prefers-reduced-motion: reduce)` apaga los `transform`.
+- **`<meta name="color-scheme" content="dark">`** en las 8 páginas para que
+  los controles nativos (selector de fecha, flechas de `<select>`) también
+  se vean oscuros.
+
+Si se va a tocar CSS o construir UI nueva, cargar `skills/SKILL.md`
+(skill `interface-design` del usuario) antes de empezar.
+
+## Pantallas
+
+| # | Pantalla | Archivo | Estado |
+|---|---|---|---|
+| 1 | Login/registro/recuperar contraseña | `html/login.html` + `html/reset-password.html` | Hecho, verificado |
+| 2 | Dashboard "Hoy" | `html/dashboard.html` | Hecho, verificado |
+| 3 | Registrar sesión | `html/registrar-sesion.html` | Hecho, verificado |
+| 4 | Historial | `html/historial.html` | Hecho, verificado |
+| 5 | Progreso/Gráficas | `html/progreso.html` | 3 de 5 gráficas |
+| 6 | Editor de rutina | `html/editor-rutina.html` | Hecho, verificado |
+
+### Gráficas (dentro de `html/progreso.html`, 3 secciones en una sola página)
+
+- ✅ **Fuerza por ejercicio** — línea de peso máximo por fecha de sesión,
+  selector de ejercicio con buscador, stats de PR y última sesión.
+- ✅ **Consistencia** — heatmap de 8 semanas (grid CSS de 7 columnas, sin
+  librería) comparando días *planeados* (`routine_day_exercises` tiene algo
+  ese día de la semana) contra *entrenados* (`workout_sessions` existe esa
+  fecha). Stat: "X/Y días planeados cumplidos".
+- ✅ **Medidas corporales** — como `body_measurements` no tenía ninguna UI,
+  se agregó un formulario rápido de "nueva medición" ahí mismo. Antebrazo y
+  bíceps comparten eje Y (cm), peso corporal usa eje Y secundario (kg).
+- ❌ **Volumen semanal por grupo muscular** (barras) — no empezada.
+- ❌ **Cardio** (duración/distancia zona 2 en el tiempo) — no empezada.
+
+## Qué falta
+
+- **Deploy en Vercel** — decidido, repo ya en GitHub y listo (config.js
+  versionado, cero build step necesario). Falta que el usuario conecte el
+  repo en vercel.com (Framework Preset: "Other", sin build/install command,
+  Output Directory `.`) y confirme la URL resultante.
+- **Redirect URL de recuperación en Supabase** — una vez exista la URL de
+  Vercel, agregar `https://<esa-url>/html/reset-password.html` en
+  Authentication → URL Configuration → Redirect URLs (y también la de
+  localhost si se sigue probando local). Sin esto, `resetPasswordForEmail`
+  no funciona en producción aunque el código esté listo.
+- **2 gráficas** — volumen semanal por grupo muscular, cardio.
+- **Confirmación de email** — el proyecto Supabase tiene confirmación de
+  email activada por defecto con el mailer integrado, que tiene rate limit
+  muy bajo (~2 emails/hora, ya se topó ese límite una vez). Vale la pena
+  decidir si se queda así, se desactiva (razonable para un proyecto de un
+  solo usuario), o se configura SMTP propio.
+
+## Notas de testing (para no rediscobrir esto en cada sesión)
+
+- El navegador de previsualización a veces no renderiza visualmente el panel
+  (falla `screenshot` con "pane is not displayed") y los clicks por
+  coordenada a veces no registran o se traban con popups nativos (como el
+  de `<datalist>`). Cuando pase, verificar disparando eventos reales sobre
+  los elementos vía `javascript_tool` (`el.click()`, `dispatchEvent(new
+  Event('input'/'change', {bubbles:true}))`) en vez de insistir con clicks
+  por pixel — funciona igual de bien para probar la lógica real.
+- El emailer integrado de Supabase tiene rate limit bajo (~2/hora). Probar
+  `resetPasswordForEmail`/signup con un email inexistente no cuenta contra
+  el límite (Supabase no revela si el usuario existe, así que no manda
+  correo) — útil para probar sin gastar cupo.
+- Al insertar/editar datos de prueba directo en Supabase durante testing,
+  limpiarlos después (se ha hecho consistentemente) para no dejar filas
+  fantasma que luego confundan cálculos como el heatmap de consistencia.
+
+## Rutina actual de referencia (datos semilla)
+
+| Día | Enfoque | Ejercicios principales |
+|---|---|---|
+| Lunes | Espalda + Tríceps (pesado) | Remo con barra, Dominadas asistidas, Remo unilateral, Extensión de tríceps en polea |
+| Martes | Antebrazo + Abdomen + Cardio (suave) | Curl inverso (polea), Curl de antebrazo, Crunch en polea, Elíptica |
+| Miércoles | Pierna (pesado, fijo) | Sentadilla, Peso muerto rumano, Prensa, Curl femoral, Gemelos de pie |
+| Jueves | Antebrazo + Abdomen + Cardio (suave) | Curl de muñeca (supino/prono), Crunch en polea (variante), Elíptica |
+| Viernes | Pliometría + Hombro (ligero) | Saltos/Box jumps, Press militar con mancuernas, Elevaciones laterales |
+| Sábado | Pecho + Bíceps (pesado) | Press inclinado, Fly con mancuernas, Fondos asistidos, Curl de bíceps, Curl martillo |
+| Domingo | Correr (zona 2) | Carrera suave, opcional curl de muñeca ligero |
 
 ## Contexto personal relevante para decisiones de producto
 
@@ -337,46 +254,21 @@ automatizado.
 - Prefiere sesiones cortas e intensas (máx. 3 series por ejercicio en general,
   8-12 series por grupo grande) sobre maximizar volumen.
 
-## Rutina actual de referencia (útil como datos semilla)
-
-| Día | Enfoque | Ejercicios principales |
-|---|---|---|
-| Lunes | Espalda + Tríceps (pesado) | Remo con barra, Dominadas asistidas, Remo unilateral, Extensión de tríceps en polea |
-| Martes | Antebrazo + Abdomen + Cardio (suave) | Curl inverso (polea), Curl de antebrazo, Crunch en polea, Elíptica |
-| Miércoles | Pierna (pesado, fijo) | Sentadilla, Peso muerto rumano, Prensa, Curl femoral, Gemelos de pie |
-| Jueves | Antebrazo + Abdomen + Cardio (suave) | Curl de muñeca (supino/prono), Crunch en polea (variante), Elíptica |
-| Viernes | Pliometría + Hombro (ligero) | Saltos/Box jumps, Press militar con mancuernas, Elevaciones laterales |
-| Sábado | Pecho + Bíceps (pesado) | Press inclinado, Fly con mancuernas, Fondos asistidos, Curl de bíceps, Curl martillo |
-| Domingo | Correr (zona 2) | Carrera suave, opcional curl de muñeca ligero |
-
-## Qué falta
-
-- **Gráficas (Chart.js) — 3 de 5 hechas.** Progresión de fuerza, consistencia
-  y medidas corporales listas en `html/progreso.html`. Faltan: volumen
-  semanal por grupo muscular (barras) y cardio (duración/distancia zona 2
-  en el tiempo).
-- **Redirect URL de recuperación en Supabase** — falta agregar
-  `.../html/reset-password.html` (localhost y, luego, la URL de producción)
-  en Authentication → URL Configuration → Redirect URLs, si no el link del
-  correo de recuperación no va a funcionar aunque el código ya esté listo.
-- **Deploy en Vercel** — decidido, todavía no hecho. El proyecto solo se ha
-  probado con un servidor estático local. Una vez publicado, agregar la URL
-  real al punto anterior (redirect de recuperación en Supabase).
-- **Confirmación de email** — el proyecto Supabase tiene confirmación de
-  email activada por defecto con el mailer integrado, que tiene rate limit
-  muy bajo (~2 emails/hora). Vale la pena decidir si se queda así, se
-  desactiva (razonable para un proyecto de un solo usuario), o se configura
-  SMTP propio más adelante.
-
 ## Cómo debe ayudar Claude en este proyecto
 
 - Priorizar código simple y legible (vanilla JS, sin build tools innecesarios)
   sobre soluciones sofisticadas, salvo que se pida explícitamente lo contrario.
-- Al proponer esquema SQL, entregarlo en formato de migraciones de Supabase
-  (`supabase/migrations/*.sql`) con políticas RLS incluidas desde el inicio.
-- Mantener consistencia con el modelo de datos y la rutina de referencia de
-  este documento, y avisar explícitamente si una sugerencia se aparta de las
-  decisiones ya tomadas aquí.
-- Ir construyendo por fases (esquema → auth/RLS → CRUD básico → registro de
-  sesión → gráficas), sin saltar a features avanzadas antes de tener lo básico
-  funcionando.
+- Al proponer cambios de esquema SQL, entregarlos como nueva migración en
+  `supabase/migrations/*.sql` (nunca editar las ya corridas) con políticas
+  RLS incluidas desde el inicio.
+- Mantener consistencia con el modelo de datos real (leer las migraciones,
+  no asumir) y la rutina de referencia de este documento; avisar
+  explícitamente si una sugerencia se aparta de decisiones ya tomadas aquí.
+- Para cambios visuales o UI nueva, cargar `skills/SKILL.md` y seguir la
+  dirección "workbench de gimnasio" ya establecida en vez de reabrir esa
+  decisión sin razón.
+- Verificar features contra el proyecto real de Supabase cuando sea posible
+  (no solo revisión de código), y limpiar cualquier dato de prueba insertado
+  durante la verificación.
+- No dar por hecho que el deploy en Vercel ya pasó — confirmar con el
+  usuario antes de asumir que hay una URL de producción.
