@@ -1,6 +1,31 @@
 # Contexto del proyecto — App de seguimiento de entrenamiento
 
-## Estado actual (actualizado 2026-08-16, pase de diseño)
+## Estado actual (actualizado 2026-08-16, responsive + primera gráfica)
+
+**Editor de rutina — responsive + filtro de catálogo.** La tabla de 8
+columnas causaba scroll horizontal en pantallas angostas; se reemplazó por
+un grid CSS (`.rde-row`/`.rde-header` en `css/style.css`) que en desktop se
+ve como tabla y por debajo de 700px se apila en 2 columnas con etiqueta por
+campo — verificado sin overflow a 375px, 408px y 1280px. El catálogo de
+ejercicios (25 y creciendo) ahora tiene chips de filtro por grupo muscular
+arriba de la lista en vez de mostrarla siempre completa.
+
+**Gráficas — arrancó con "progresión de fuerza por ejercicio"
+(`html/progreso.html` + `js/progreso.js`).** Chart.js vía CDN (sin build
+tools, igual que el resto del stack). Selector de ejercicio (solo
+`fuerza`/`pliometria` — cardio no tiene peso), gráfica de línea del peso
+máximo levantado por fecha de sesión (consulta `session_sets` con join a
+`workout_sessions` para la fecha, agrupa por fecha en cliente), más dos
+stats simples arriba (PR histórico, peso de la última sesión). Colores de
+la gráfica leídos de las variables CSS del sistema de diseño
+(`getComputedStyle`), no hardcodeados, para no duplicar la paleta. Faltan
+las otras 4 gráficas del plan (volumen semanal, consistencia, medidas
+corporales, cardio) — quedan para después, mismo patrón.
+
+Se agregó el link "Progreso" a la navegación de dashboard, historial y
+editor de rutina.
+
+## Estado actual — pase de diseño (actualizado 2026-08-16)
 
 **Pase de diseño visual: hecho sobre las 5 pantallas** (login, dashboard,
 registrar sesión, historial, editor de rutina). Dirección confirmada con el
@@ -234,10 +259,10 @@ automatizado.
 
 ## Qué falta
 
-- **Gráficas (Chart.js)** — ninguna de las 5 gráficas del plan está
-  implementada; Chart.js ni siquiera está incluido en el proyecto todavía.
-  Ahora que ya está la dirección visual definida (ver "Estado actual"), este
-  es el siguiente bloque natural a construir.
+- **Gráficas (Chart.js) — 1 de 5 hecha.** Progresión de fuerza por ejercicio
+  lista (`html/progreso.html`). Faltan: volumen semanal por grupo muscular
+  (barras), consistencia (heatmap calendario), medidas corporales en el
+  tiempo (línea), cardio (duración/distancia zona 2 en el tiempo).
 - **`body_measurements`** — la tabla existe con RLS, pero no hay ninguna
   pantalla ni formulario para leerla o escribirla.
 - **Recuperación de contraseña** — el formulario de login no tiene flujo de
