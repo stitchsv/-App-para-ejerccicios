@@ -27,6 +27,22 @@
     <div class="alert alert-danger d-none" id="mensaje-error" role="alert"></div>
 
     <div class="card mb-4">
+      <div class="card-header">Mis rutinas</div>
+      <div class="card-body">
+        <ul class="list-group list-group-flush mb-3" id="lista-rutinas"></ul>
+        <form id="form-nueva-rutina" class="row g-2 align-items-end">
+          <div class="col-8 col-md-9">
+            <label class="form-label small">Nueva rutina</label>
+            <input type="text" class="form-control form-control-sm" id="nueva-rutina-nombre" placeholder="Nombre de la rutina" required>
+          </div>
+          <div class="col-4 col-md-3">
+            <button type="submit" class="btn btn-sm btn-outline-primary w-100">Crear</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card mb-4">
       <div class="card-header">Catálogo de ejercicios</div>
       <div class="card-body">
         <div class="d-flex flex-wrap gap-2 mb-3" id="filtro-grupo-muscular"></div>
@@ -57,7 +73,9 @@
 
     <datalist id="datalist-catalogo"></datalist>
 
+    <h2 class="h5 mb-3" id="titulo-rutina-seleccionada"></h2>
     <div id="lista-dias"></div>
+    <div id="agregar-dia-container"></div>
   </div>
 
   <template id="template-fila-ejercicio">

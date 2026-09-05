@@ -168,7 +168,8 @@ function renderChart(labels, data) {
 async function cargarConsistencia() {
   const { data: dias, error: errorDias } = await supabaseClient
     .from('routine_days')
-    .select('day_of_week, routine_day_exercises ( id )');
+    .select('day_of_week, routine_day_exercises ( id ), routines!inner(is_active)')
+    .eq('routines.is_active', true);
 
   if (errorDias) return mostrarError(errorDias);
 

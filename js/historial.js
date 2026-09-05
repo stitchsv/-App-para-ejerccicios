@@ -40,7 +40,8 @@ function etiquetaFecha(dateStr) {
 async function cargarFiltroDias() {
   const { data } = await supabaseClient
     .from('routine_days')
-    .select('id, day_of_week, focus')
+    .select('id, day_of_week, focus, routines!inner(is_active)')
+    .eq('routines.is_active', true)
     .order('day_of_week', { ascending: true });
 
   const select = document.getElementById('filtro-dia');

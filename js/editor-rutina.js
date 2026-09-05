@@ -1,23 +1,28 @@
-// Lógica del Editor de rutina: modificar el catálogo de ejercicios y la
-// plantilla semanal (routine_days / routine_day_exercises) sin tocar SQL.
+// Lógica del Editor de rutina: catálogo de ejercicios, rutinas del usuario
+// (routines) y la plantilla semanal de la rutina seleccionada
+// (routine_days / routine_day_exercises) sin tocar SQL.
 // Depende de supabaseClient.js, auth.js y routine-data.js (para DIAS_SEMANA).
 //
-// Los routine_days (1-7) ya existen sembrados por usuario (constraint
-// unique(user_id, day_of_week)) — este editor no crea ni borra días, solo
-// edita su enfoque/notas y administra los ejercicios dentro de cada uno.
+// Un usuario puede tener varias rutinas (tabla `routines`); una sola puede
+// estar activa a la vez (constraint parcial en la BD). Este editor permite
+// crear/activar/renombrar/eliminar rutinas, y dentro de la rutina
+// seleccionada, agregar/eliminar días y administrar sus ejercicios.
 
 let usuarioActual = null;
 let catalogoEjercicios = [];
 let filtroGrupoActual = null; // null = todos los grupos
+let listaRutinas = [];
+let rutinaSeleccionadaId = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
   usuarioActual = await requireSession();
   if (!usuarioActual) return;
 
   await cargarCatalogo();
-  await cargarDias();
+  await cargarRutinas();
 
   document.getElementById('form-nuevo-ejercicio').addEventListener('submit', onNuevoEjercicio);
+  document.getElementById('form-nueva-rutina').addEventListener('submit', onNuevaRutina);
   document.getElementById('btn-logout').addEventListener('click', logout);
 });
 
@@ -111,10 +116,134 @@ function buscarEjercicioPorNombre(nombre) {
 }
 
 // ---------------------------------------------------------------------
+// Rutinas (routines)
+// ---------------------------------------------------------------------
+
+async function cargarRutinas() {
+  const { data, error } = await supabaseClient
+    .from('routines')
+    .select('id, name, source, is_active')
+    .order('created_at', { ascending: true });
+
+  if (error) return mostrarError(error);
+
+  listaRutinas = data || [];
+  renderListaRutinas();
+
+  const activa = listaRutinas.find((r) => r.is_active);
+  const siguiente = listaRutinas.find((r) => r.id === rutinaSeleccionadaId) || activa || listaRutinas[0];
+  if (siguiente) await seleccionarRutina(siguiente.id);
+}
+
+function renderListaRutinas() {
+  const lista = document.getElementById('lista-rutinas');
+  lista.innerHTML = listaRutinas.map((r) => `
+    <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2" data-rutina-id="${r.id}">
+      <span>
+        <strong class="${r.id === rutinaSeleccionadaId ? 'text-warning' : ''}">${r.name}</strong>
+        ${r.is_active ? '<span class="badge text-bg-success ms-2">Activa</span>' : ''}
+      </span>
+      <span class="d-flex gap-2">
+        <button type="button" class="btn btn-sm btn-outline-secondary btn-ver-rutina">Ver/editar</button>
+        ${r.is_active ? '' : '<button type="button" class="btn btn-sm btn-outline-primary btn-activar-rutina">Activar</button>'}
+        <button type="button" class="btn btn-sm btn-outline-secondary btn-renombrar-rutina">Renombrar</button>
+        ${r.is_active ? '' : '<button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-rutina">Eliminar</button>'}
+      </span>
+    </li>
+  `).join('');
+
+  lista.querySelectorAll('li').forEach((li) => {
+    const id = li.dataset.rutinaId;
+    li.querySelector('.btn-ver-rutina').addEventListener('click', () => seleccionarRutina(id));
+    li.querySelector('.btn-activar-rutina')?.addEventListener('click', () => activarRutina(id));
+    li.querySelector('.btn-renombrar-rutina').addEventListener('click', () => renombrarRutina(id));
+    li.querySelector('.btn-eliminar-rutina')?.addEventListener('click', () => eliminarRutina(id));
+  });
+}
+
+async function onNuevaRutina(event) {
+  event.preventDefault();
+  const input = document.getElementById('nueva-rutina-nombre');
+  const nombre = input.value.trim();
+  if (!nombre) return;
+
+  const { data, error } = await supabaseClient
+    .from('routines')
+    .insert({ user_id: usuarioActual.id, name: nombre, source: 'custom', is_active: false })
+    .select('id')
+    .single();
+
+  if (error) return mostrarError(error);
+
+  input.value = '';
+  rutinaSeleccionadaId = data.id;
+  await cargarRutinas();
+}
+
+// Activar desactiva primero cualquier otra rutina activa del usuario (la
+// BD solo permite una a la vez) y luego marca esta — en dos pasos porque
+// no puede haber un instante con dos filas activas a la vez.
+async function activarRutina(routineId) {
+  const { error: errorDesactivar } = await supabaseClient
+    .from('routines')
+    .update({ is_active: false })
+    .eq('user_id', usuarioActual.id)
+    .eq('is_active', true);
+
+  if (errorDesactivar) return mostrarError(errorDesactivar);
+
+  const { error: errorActivar } = await supabaseClient
+    .from('routines')
+    .update({ is_active: true })
+    .eq('id', routineId);
+
+  if (errorActivar) return mostrarError(errorActivar);
+
+  await cargarRutinas();
+}
+
+async function renombrarRutina(routineId) {
+  const actual = listaRutinas.find((r) => r.id === routineId);
+  const nuevoNombre = prompt('Nuevo nombre de la rutina:', actual?.name ?? '');
+  if (!nuevoNombre || !nuevoNombre.trim()) return;
+
+  const { error } = await supabaseClient
+    .from('routines')
+    .update({ name: nuevoNombre.trim() })
+    .eq('id', routineId);
+
+  if (error) return mostrarError(error);
+  await cargarRutinas();
+}
+
+async function eliminarRutina(routineId) {
+  if (!confirm('¿Eliminar esta rutina y todos sus días y ejercicios asignados? Esta acción no se puede deshacer.')) return;
+
+  const { error } = await supabaseClient
+    .from('routines')
+    .delete()
+    .eq('id', routineId);
+
+  if (error) return mostrarError(error);
+
+  if (rutinaSeleccionadaId === routineId) rutinaSeleccionadaId = null;
+  await cargarRutinas();
+}
+
+async function seleccionarRutina(routineId) {
+  rutinaSeleccionadaId = routineId;
+  renderListaRutinas();
+  await cargarDias();
+}
+
+// ---------------------------------------------------------------------
 // Días de rutina
 // ---------------------------------------------------------------------
 
 async function cargarDias() {
+  const rutina = listaRutinas.find((r) => r.id === rutinaSeleccionadaId);
+  document.getElementById('titulo-rutina-seleccionada').textContent = rutina ? `Días de "${rutina.name}"` : '';
+
   const { data, error } = await supabaseClient
     .from('routine_days')
     .select(`
@@ -125,6 +254,7 @@ async function cargarDias() {
         exercises ( name )
       )
     `)
+    .eq('routine_id', rutinaSeleccionadaId)
     .order('day_of_week', { ascending: true });
 
   if (error) return mostrarError(error);
@@ -135,6 +265,71 @@ async function cargarDias() {
     dia.routine_day_exercises.sort((a, b) => a.order_index - b.order_index);
     contenedor.appendChild(renderDiaCard(dia));
   });
+
+  renderAgregarDiaForm(data || []);
+}
+
+// Formulario para agregar un día nuevo a la rutina seleccionada — solo
+// ofrece días de la semana que esa rutina todavía no tiene.
+function renderAgregarDiaForm(diasActuales) {
+  const contenedor = document.getElementById('agregar-dia-container');
+  const diasUsados = new Set(diasActuales.map((d) => d.day_of_week));
+  const diasDisponibles = [1, 2, 3, 4, 5, 6, 7].filter((d) => !diasUsados.has(d));
+
+  if (!rutinaSeleccionadaId || diasDisponibles.length === 0) {
+    contenedor.innerHTML = '';
+    return;
+  }
+
+  contenedor.innerHTML = `
+    <div class="card mb-4">
+      <div class="card-header">Agregar día a esta rutina</div>
+      <div class="card-body">
+        <div class="row g-2 align-items-end">
+          <div class="col-6 col-md-4">
+            <label class="form-label small">Día</label>
+            <select class="form-select form-select-sm" id="nuevo-dia-select">
+              ${diasDisponibles.map((d) => `<option value="${d}">${DIAS_SEMANA[d]}</option>`).join('')}
+            </select>
+          </div>
+          <div class="col-6 col-md-6">
+            <label class="form-label small">Enfoque</label>
+            <input type="text" class="form-control form-control-sm" id="nuevo-dia-focus" placeholder="Ej. Pierna (pesado)">
+          </div>
+          <div class="col-12 col-md-2">
+            <button type="button" class="btn btn-sm btn-outline-primary w-100" id="btn-agregar-dia">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('btn-agregar-dia').addEventListener('click', onAgregarDia);
+}
+
+async function onAgregarDia() {
+  const dayOfWeek = Number(document.getElementById('nuevo-dia-select').value);
+  const focus = document.getElementById('nuevo-dia-focus').value.trim();
+  if (!focus) return;
+
+  const { error } = await supabaseClient
+    .from('routine_days')
+    .insert({ user_id: usuarioActual.id, routine_id: rutinaSeleccionadaId, day_of_week: dayOfWeek, focus });
+
+  if (error) return mostrarError(error);
+  await cargarDias();
+}
+
+async function eliminarDia(routineDayId) {
+  if (!confirm('¿Eliminar este día y todos sus ejercicios asignados?')) return;
+
+  const { error } = await supabaseClient
+    .from('routine_days')
+    .delete()
+    .eq('id', routineDayId);
+
+  if (error) return mostrarError(error);
+  await cargarDias();
 }
 
 function renderDiaCard(dia) {
@@ -152,6 +347,9 @@ function renderDiaCard(dia) {
         </div>
         <div class="col-4 col-md-1">
           <button type="button" class="btn btn-sm btn-outline-secondary w-100 btn-guardar-dia">Guardar</button>
+        </div>
+        <div class="col-4 col-md-1">
+          <button type="button" class="btn btn-sm btn-outline-danger w-100 btn-eliminar-dia">Eliminar día</button>
         </div>
       </div>
     </div>
@@ -195,6 +393,7 @@ function renderDiaCard(dia) {
   });
 
   card.querySelector('.btn-guardar-dia').addEventListener('click', () => guardarDia(dia.id, card));
+  card.querySelector('.btn-eliminar-dia').addEventListener('click', () => eliminarDia(dia.id));
 
   const btnAgregar = card.querySelector('.btn-agregar-ejercicio');
   const siguienteOrden = dia.routine_day_exercises.length + 1;

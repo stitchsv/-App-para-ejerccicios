@@ -5,10 +5,14 @@
 // del seed SQL — para poder trabajar en el frontend igual.
 //
 // Esquema real (supabase/migrations):
-//   routine_days(id, user_id, day_of_week smallint 1-7 [1=lunes...7=domingo], focus, notes)
+//   routines(id, user_id, name, source ['template'|'custom'], is_active)
+//   routine_days(id, user_id, routine_id, day_of_week smallint 1-7 [1=lunes...7=domingo], focus, notes)
 //   routine_day_exercises(id, user_id, routine_day_id, exercise_id, target_sets,
 //     target_reps_min, target_reps_max, target_duration_minutes, order_index, notes)
 //   exercises(id, user_id, name, muscle_group, type ['fuerza'|'cardio'|'pliometria'])
+//
+// Un usuario puede tener varias rutinas guardadas; "Hoy" siempre lee de la
+// que tiene routines.is_active = true (constraint: una sola activa a la vez).
 
 const DIAS_SEMANA = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
@@ -80,8 +84,9 @@ async function getTodayRoutine(jsDay = new Date().getDay()) {
   try {
     const { data: routineDay, error: routineDayError } = await supabaseClient
       .from('routine_days')
-      .select('id, focus, notes')
+      .select('id, focus, notes, routines!inner(is_active)')
       .eq('day_of_week', dayOfWeek)
+      .eq('routines.is_active', true)
       .maybeSingle();
 
     if (routineDayError) throw routineDayError;

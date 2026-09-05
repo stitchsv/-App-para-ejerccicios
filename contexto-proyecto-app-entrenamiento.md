@@ -28,21 +28,25 @@ con autenticación y RLS "bien hecho" como práctica) para:
   React/Vue, sin build tools). Cliente `supabase-js` v2 vía CDN para hablar
   directo con la base de datos desde el navegador.
 - **Gráficas:** Chart.js vía CDN.
-- **Hosting:** estático en **Vercel** — decidido, repo ya empujado a GitHub
-  (`stitchsv/-App-para-ejerccicios`, rama `master`), deploy en Vercel todavía
-  no confirmado por el usuario (ver "Qué falta").
+- **Hosting:** estático en **Vercel** — repo empujado a GitHub
+  (`stitchsv/-App-para-ejerccicios`, rama `master`), **deploy confirmado y
+  probado por el usuario en producción, funciona bien.**
 - **Autenticación:** Supabase Auth (email/password). Aunque el uso real es de
   un solo usuario, se implementa auth y RLS correctamente como ejercicio de
   práctica.
 
 ## Estado actual — resumen ejecutivo
 
-**Las 7 pantallas del flujo están construidas, con diseño visual aplicado, y
-verificadas end-to-end contra el proyecto real de Supabase** (no solo
-revisadas por código — cada feature se probó insertando/editando/borrando
-datos reales y confirmando en la UI y/o directo en la base). Falta: 2 de 5
-gráficas, y publicar el deploy en Vercel (ver "Qué falta" para el detalle
-completo).
+**Las 7 pantallas del flujo están construidas, con diseño visual aplicado,
+desplegadas en Vercel y verificadas end-to-end contra el proyecto real de
+Supabase** (no solo revisadas por código — cada feature se probó
+insertando/editando/borrando datos reales y confirmando en la UI y/o directo
+en la base). El usuario ya probó la versión en producción y el foco ahora
+pasó a **funcionalidad pendiente** (rutinas múltiples, navegación, perfil,
+onboarding, catálogo de ejercicios por músculo, calendario tipo racha) —
+ver `roadmap-funcionalidades.md` para el detalle completo y el orden de
+trabajo. El diseño visual/animaciones se deja pospuesto a propósito hasta
+terminar ese roadmap.
 
 - **Esquema + RLS**: corrido y sembrado en Supabase, versionado en
   `supabase/migrations/`.
@@ -118,6 +122,11 @@ Puntos no obvios del esquema:
 - `routine_day_exercises` tiene `target_sets`/`target_reps_min`/
   `target_reps_max` (fuerza) **o** `target_duration_minutes` (cardio) — no
   ambos a la vez normalmente.
+- `routine_days` tiene `unique (user_id, day_of_week)` — el esquema actual
+  asume **una sola rutina activa por usuario**, sin nombre ni forma de tener
+  varias guardadas. Esto va a cambiar (tabla `routines` + `routine_id` en
+  `routine_days`) — ver `roadmap-funcionalidades.md` #1 antes de asumir que
+  el modelo actual es definitivo.
 
 La relación clave del producto es **plan (`routine_day_exercises`) vs.
 ejecución (`session_sets`)** — comparar "lo que debía hacer" contra "lo que
@@ -194,21 +203,13 @@ Si se va a tocar CSS o construir UI nueva, cargar `skills/SKILL.md`
 
 ## Qué falta
 
-- **Deploy en Vercel** — decidido, repo ya en GitHub y listo (config.js
-  versionado, cero build step necesario). Falta que el usuario conecte el
-  repo en vercel.com (Framework Preset: "Other", sin build/install command,
-  Output Directory `.`) y confirme la URL resultante.
-- **Redirect URL de recuperación en Supabase** — una vez exista la URL de
-  Vercel, agregar `https://<esa-url>/html/reset-password.html` en
-  Authentication → URL Configuration → Redirect URLs (y también la de
-  localhost si se sigue probando local). Sin esto, `resetPasswordForEmail`
-  no funciona en producción aunque el código esté listo.
-- **2 gráficas** — volumen semanal por grupo muscular, cardio.
-- **Confirmación de email** — el proyecto Supabase tiene confirmación de
-  email activada por defecto con el mailer integrado, que tiene rate limit
-  muy bajo (~2 emails/hora, ya se topó ese límite una vez). Vale la pena
-  decidir si se queda así, se desactiva (razonable para un proyecto de un
-  solo usuario), o se configura SMTP propio.
+Ver **`roadmap-funcionalidades.md`** — documento dedicado al trabajo
+funcional pendiente (rutinas múltiples/personalizadas, menú inferior,
+pantalla de perfil, onboarding, catálogo de ejercicios por músculo,
+autofill de peso, calendario mensual tipo racha, y los pendientes técnicos
+heredados: 2 gráficas, redirect URL de recuperación, rate limit de email).
+El diseño visual y las animaciones quedan pospuestos a propósito hasta
+terminar ese roadmap — no reabrir esa decisión sin que el usuario lo pida.
 
 ## Notas de testing (para no rediscobrir esto en cada sesión)
 
