@@ -1,10 +1,10 @@
 # Roadmap de funcionalidades pendientes — App de entrenamiento
 
 > Este documento es la fuente de verdad para el trabajo **funcional** pendiente,
-> separado de `contexto-proyecto-app-entrenamiento.md` (que describe el estado
-> ya construido/verificado, el stack, el esquema y el sistema de diseño). Leer
-> ese documento primero si es una sesión nueva sin contexto — este asume todo
-> lo que ahí se describe como punto de partida.
+> separado de `contexto-proyecto-app-entrenamiento.md` (estado ya construido,
+> stack, esquema) y de `sistema-diseño-visual.md` (paleta, tipografía,
+> componentes visuales). Leer esos documentos primero si es una sesión nueva
+> sin contexto — este asume todo lo que ahí se describe como punto de partida.
 
 ## Filosofía de esta fase
 
@@ -273,6 +273,13 @@ necesario esperar.
 Reconocido por el usuario como "demasiado simple", pero pospuesto
 explícitamente hasta terminar los puntos 1–10. Mientras tanto: las pantallas
 nuevas (bottom nav, perfil, onboarding, calendario mensual) deben ser
-usables y consistentes con `css/style.css` y `skills/SKILL.md`
-(`interface-design`), pero sin invertir tiempo extra en pulir animaciones o
-microinteracciones hasta que el usuario lo pida.
+usables y consistentes con el sistema oscuro/ámbar **ya implementado** en
+`css/style.css` y `skills/SKILL.md` (`interface-design`), pero sin invertir
+tiempo extra en pulir animaciones o microinteracciones hasta que el usuario
+lo pida.
+
+**La dirección del rediseño ya está decidida** — `sistema-diseño-visual.md`
+documenta el sistema "Clean UI" (blanco/azul) aprobado como destino, que se
+construirá con Claude Design en una sesión aparte. Lo que sigue pospuesto es
+**cuándo** se implementa (después de terminar los puntos 1–10), no **hacia
+qué** se va a rediseñar.

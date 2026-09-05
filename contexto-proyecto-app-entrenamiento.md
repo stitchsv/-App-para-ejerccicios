@@ -142,40 +142,27 @@ primera corrida del seed (password desconocida, sin poder resetear por rate
 limit de email) — no tiene datos ni se usa en ningún lado del código, se
 puede ignorar o borrar desde el dashboard de Supabase.
 
-## Sistema de diseño — "workbench de gimnasio"
+## Sistema de diseño
 
-Dirección confirmada con el usuario (iterando sobre una propuesta inicial que
-tiraba demasiado a cálido/amarillo — corregida a neutro con el ámbar como
-único acento aislado). Denso, oscuro, sin adornos — pensado para leerse
-rápido a mitad de una serie en el celular. Todo vive en `css/style.css` como
-variables CSS, sobreescribiendo Bootstrap vía sus propias variables (`--bs-*`)
-en `:root` más overrides puntuales donde Bootstrap no cascadea bien. No hay
-`data-bs-theme` ni toggle claro/oscuro — un solo tema fijo.
+**`sistema-diseño-visual.md` es la única fuente de verdad para diseño
+visual** (paleta, tipografía, componentes, espaciado, animaciones,
+accesibilidad) — no dupliques esa información aquí, edítala solo ahí.
 
-- **Superficies** (escalón, sin sombras): base `#18181b` → tarjeta `#222225`
-  → input `#101012` (más oscuro — recibe contenido, no un peldaño hacia arriba).
-- **Texto**: primario `#e7e7e4`, muted `#8b8b8d` — neutros, sin sesgo cálido.
-- **Acento único**: ámbar `#d98c3d` / `#e6a15c` (hover) — botones primarios y
-  estado "necesita tu atención". Verde `#6fa05e` solo para "logrado". Nada
-  más lleva color.
-- **Números** (peso, reps, fechas, series) en fuente monospace con
-  `font-variant-numeric: tabular-nums` (clase `.stat`, y `input[type=number]`
-  globalmente) — se leen como un dial, no saltan de ancho.
-- **Buscador de ejercicios**: `input` + `<datalist>` nativo (clase
-  `.search-combo`) en vez de `<select>` largos — el navegador filtra
-  conforme se escribe, sin backend especial.
-- **Tablas responsive**: grid CSS (`.rde-row`/`.rde-header`), no `<table>` —
-  se ve como tabla en desktop y se apila en 2 columnas con etiqueta por
-  campo por debajo de 700px. No hay ningún `<table>` en el proyecto.
-- **Movimiento**: transiciones de 0.15s en botones/links/chips/inputs,
-  `.btn:active { scale(0.98) }`, hover con `scale(1.15)` en el heatmap,
-  `@media (prefers-reduced-motion: reduce)` apaga los `transform`.
-- **`<meta name="color-scheme" content="dark">`** en las 8 páginas para que
-  los controles nativos (selector de fecha, flechas de `<select>`) también
-  se vean oscuros.
+Estado real de la implementación en `css/style.css` hoy: sigue siendo el
+sistema oscuro "workbench de gimnasio" (fondo `#18181b`, acento ámbar,
+documentado como v1.0 dentro de `sistema-diseño-visual.md`), con un tema
+claro alterno ya implementado y probado en Perfil (también ámbar/neutro,
+no el Clean UI blanco/azul). **El rediseño "Clean UI" (v2.0, blanco/azul)
+que describe `sistema-diseño-visual.md` está confirmado como dirección a
+seguir, pero todavía NO se ha implementado en este repo** — se construirá
+con Claude Design en una sesión aparte y luego se integrará aquí. No
+empieces a migrar CSS/HTML hacia ese sistema por tu cuenta; hazlo solo
+cuando el usuario lo pida explícitamente.
 
-Si se va a tocar CSS o construir UI nueva, cargar `skills/SKILL.md`
-(skill `interface-design` del usuario) antes de empezar.
+Mientras tanto, si se toca CSS o se construye UI nueva: seguir el sistema
+oscuro/ámbar ya implementado (no el de `sistema-diseño-visual.md` todavía)
+y cargar `skills/SKILL.md` (skill `interface-design` del usuario) antes de
+empezar.
 
 ## Pantallas
 
@@ -266,9 +253,10 @@ terminar ese roadmap — no reabrir esa decisión sin que el usuario lo pida.
 - Mantener consistencia con el modelo de datos real (leer las migraciones,
   no asumir) y la rutina de referencia de este documento; avisar
   explícitamente si una sugerencia se aparta de decisiones ya tomadas aquí.
-- Para cambios visuales o UI nueva, cargar `skills/SKILL.md` y seguir la
-  dirección "workbench de gimnasio" ya establecida en vez de reabrir esa
-  decisión sin razón.
+- Para cambios visuales o UI nueva, cargar `skills/SKILL.md` y seguir el
+  sistema oscuro/ámbar **ya implementado** (ver "Sistema de diseño" arriba)
+  — el rediseño Clean UI de `sistema-diseño-visual.md` está confirmado
+  pero no implementado; no empezarlo sin que el usuario lo pida.
 - Verificar features contra el proyecto real de Supabase cuando sea posible
   (no solo revisión de código), y limpiar cualquier dato de prueba insertado
   durante la verificación.
