@@ -89,11 +89,80 @@
   --bs-focus-ring-color: rgba(217, 140, 61, 0.4);
 }
 
+/* ---------------------------------------------------------------------
+   Tema claro — mismo sistema, mismos huecos de jerarquía, solo se invierte
+   la escala de superficies/texto. Un solo acento (ámbar), un solo verde de
+   éxito, igual que en oscuro — nunca dos temperaturas de color a la vez.
+   Se activa con [data-theme="light"] en <html> (ver js/perfil.js).
+   --------------------------------------------------------------------- */
+:root[data-theme="light"] {
+  --surface-0: #f2f1ee;
+  --surface-1: #ffffff;
+  --surface-2: #e9e7e2;
+  --surface-input: #ececea;
+
+  --border: rgba(0, 0, 0, 0.1);
+  --border-strong: rgba(0, 0, 0, 0.18);
+
+  --text-primary: #1c1c1e;
+  --text-secondary: #55555a;
+  --text-muted: #85858a;
+
+  --accent: #c17a2e;
+  --accent-strong: #9c5f22;
+  --success: #3f7a34;
+  --danger: #a23b31;
+
+  --bs-primary: var(--accent);
+  --bs-primary-rgb: 193, 122, 46;
+  --bs-primary-text-emphasis: #8a4f18;
+  --bs-primary-bg-subtle: #fbead2;
+  --bs-primary-border-subtle: #f0cfa0;
+
+  --bs-success: var(--success);
+  --bs-success-rgb: 63, 122, 52;
+  --bs-success-text-emphasis: #2f5c27;
+  --bs-success-bg-subtle: #e3f1de;
+  --bs-success-border-subtle: #c3ddb8;
+
+  --bs-danger: var(--danger);
+  --bs-danger-rgb: 162, 59, 49;
+  --bs-danger-text-emphasis: #7a2a21;
+  --bs-danger-bg-subtle: #f7e2df;
+  --bs-danger-border-subtle: #e8bcb5;
+
+  --bs-warning: var(--accent);
+  --bs-warning-rgb: 193, 122, 46;
+  --bs-warning-text-emphasis: #8a4f18;
+  --bs-warning-bg-subtle: #fbead2;
+  --bs-warning-border-subtle: #f0cfa0;
+
+  --bs-focus-ring-color: rgba(193, 122, 46, 0.35);
+}
+
+/* ---------------------------------------------------------------------
+   Tamaño de letra — escala todo el rem del sistema (Bootstrap es rem-first)
+   desde la raíz, en vez de tocar cada componente por separado.
+   Se activa con [data-font-size="small"|"large"] en <html>; "medium" es el
+   tamaño de siempre y no lleva atributo.
+   --------------------------------------------------------------------- */
+:root[data-font-size="small"] {
+  font-size: 87.5%;
+}
+
+:root[data-font-size="large"] {
+  font-size: 112.5%;
+}
+
 body {
   background-color: var(--surface-0);
   color: var(--text-primary);
   padding-bottom: 3rem;
   -webkit-font-smoothing: antialiased;
+}
+
+body:has(.bottom-nav) {
+  padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 1rem);
 }
 
 .app-container {
@@ -300,26 +369,86 @@ input[type="number"] {
 }
 
 /* ---------------------------------------------------------------------
-   Navbar — misma superficie que la página, no un bloque aparte.
+   Barra superior — solo título de la pantalla. La navegación entre
+   pantallas vive en el menú inferior (.bottom-nav); esta barra ya no
+   lleva links ni el botón de salir (ver .bottom-nav y html/perfil.html).
    --------------------------------------------------------------------- */
 
-.navbar.bg-dark {
-  background-color: var(--surface-0) !important;
+.app-topbar {
+  background-color: var(--surface-0);
   border-bottom: 1px solid var(--border);
+  padding: 14px 1rem;
+  margin-bottom: 1rem;
 }
 
-.navbar-brand {
+.app-topbar-title {
+  max-width: 640px;
+  margin: 0 auto;
+  display: block;
   font-weight: 600;
-  color: var(--text-primary) !important;
+  font-size: 1.1rem;
+  color: var(--text-primary);
 }
 
-.link-light {
-  color: var(--text-secondary) !important;
+/* ---------------------------------------------------------------------
+   Menú inferior — navegación fija estilo app móvil (Instagram/TikTok):
+   5 destinos, el activo se distingue por color, no por relleno, para no
+   competir con el acento reservado a acción/pendiente en el resto de la
+   UI. Fixed + safe-area para que no quede debajo del home indicator.
+   --------------------------------------------------------------------- */
+
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  max-width: 640px;
+  margin: 0 auto;
+  background-color: var(--surface-1);
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+}
+
+.bottom-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 4px;
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
   text-decoration: none;
+  font-size: 11px;
+  font-weight: 500;
+  transition: color 0.15s ease, transform 0.1s ease;
 }
 
-.link-light:hover {
-  color: var(--text-primary) !important;
+.bottom-nav-item svg {
+  width: 22px;
+  height: 22px;
+}
+
+.bottom-nav-item:hover {
+  color: var(--text-secondary);
+}
+
+.bottom-nav-item.activo {
+  color: var(--accent-strong);
+}
+
+.bottom-nav-item:active {
+  transform: scale(0.94);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bottom-nav-item:active {
+    transform: none;
+  }
 }
 
 /* ---------------------------------------------------------------------

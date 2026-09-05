@@ -5,16 +5,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   const user = await requireSession();
   if (!user) return;
 
-  document.getElementById('user-email').textContent = user.email;
-
   const routine = await getTodayRoutine();
   renderRoutine(routine);
 
   document.getElementById('btn-registrar').addEventListener('click', () => {
     window.location.href = 'registrar-sesion.html';
   });
-
-  document.getElementById('btn-logout').addEventListener('click', logout);
 });
 
 function renderRoutine(routine) {

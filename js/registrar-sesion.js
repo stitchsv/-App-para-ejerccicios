@@ -48,7 +48,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   document.getElementById('form-sesion').addEventListener('submit', onSubmit);
-  document.getElementById('btn-logout').addEventListener('click', logout);
 });
 
 function renderEjercicios(ejercicios) {

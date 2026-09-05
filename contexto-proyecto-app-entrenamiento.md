@@ -30,7 +30,8 @@ con autenticación y RLS "bien hecho" como práctica) para:
 - **Gráficas:** Chart.js vía CDN.
 - **Hosting:** estático en **Vercel** — repo empujado a GitHub
   (`stitchsv/-App-para-ejerccicios`, rama `master`), **deploy confirmado y
-  probado por el usuario en producción, funciona bien.**
+  probado por el usuario en producción, funciona bien.** URL:
+  `https://app-para-ejerccicios.vercel.app/`.
 - **Autenticación:** Supabase Auth (email/password). Aunque el uso real es de
   un solo usuario, se implementa auth y RLS correctamente como ejercicio de
   práctica.

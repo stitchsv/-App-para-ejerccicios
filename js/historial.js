@@ -20,7 +20,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('filtro-ejercicio').value = '';
     cargarSesiones();
   });
-  document.getElementById('btn-logout').addEventListener('click', logout);
 });
 
 // 'YYYY-MM-DD' -> Date en medianoche local (evita el corrimiento de día que

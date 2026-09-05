@@ -22,7 +22,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (ej) cargarProgreso();
   });
   document.getElementById('form-medida').addEventListener('submit', onNuevaMedida);
-  document.getElementById('btn-logout').addEventListener('click', logout);
 });
 
 function buscarEjercicioPorNombre(nombre) {

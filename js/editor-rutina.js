@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('form-nuevo-ejercicio').addEventListener('submit', onNuevoEjercicio);
   document.getElementById('form-nueva-rutina').addEventListener('submit', onNuevaRutina);
-  document.getElementById('btn-logout').addEventListener('click', logout);
 });
 
 function mostrarError(err) {
